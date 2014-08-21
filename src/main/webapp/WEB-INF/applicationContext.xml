@@ -230,7 +230,7 @@
         <property name="availableImages">
             <list>
                 <bean class="org.auscope.portal.server.vegl.VglMachineImage">
-                    <constructor-arg name="imageId" value="RegionOne/8e05dc4f-6912-41a9-8169-9d1fc055d7cc"/>
+                    <constructor-arg name="imageId" value="RegionOne/3f98cc0f-8b27-44ce-8979-df1f57c00558"/>
                     <property name="name" value="ANUGA"/>
                     <property name="description">
                         <value>A Centos 6 machine with ANUGA/eScript already installed.</value>
@@ -260,7 +260,7 @@
         <property name="availableImages">
             <list>
                 <bean class="org.auscope.portal.server.vegl.VglMachineImage">
-                    <constructor-arg name="imageId" value="Melbourne/96130956-ad24-4d77-8155-b7f1fb688fd1"/>
+                    <constructor-arg name="imageId" value="Melbourne/85728cb8-5ff3-4110-91ab-a5567f714ca0"/>
                     <property name="name" value="escript"/>
                     <property name="description"><value>A Centos 6 machine with escript already installed.</value></property>
                     <property name="keywords">
@@ -271,12 +271,23 @@
                     </property>
                 </bean>
                 <bean class="org.auscope.portal.server.vegl.VglMachineImage">
-                    <constructor-arg name="imageId" value="Melbourne/4ab32e29-14cb-4eb8-9580-93c14a80108f"/>
+                    <constructor-arg name="imageId" value="Melbourne/7fa567fb-24bb-412b-8c15-5002370ca199"/>
                     <property name="name" value="ANUGA"/>
                     <property name="description"><value>A Centos 6 machine with ANUGA already installed.</value></property>
                     <property name="keywords">
                         <array>
                             <value>anuga</value>
+                            <value>centos6</value>
+                        </array>
+                    </property>
+                </bean>
+                <bean class="org.auscope.portal.server.vegl.VglMachineImage">
+                    <constructor-arg name="imageId" value="Melbourne/8f9f364c-9945-44cd-bd64-5327d04d4489"/>
+                    <property name="name" value="TCRM"/>
+                    <property name="description"><value>A Centos 6 machine with TCRM already installed.</value></property>
+                    <property name="keywords">
+                        <array>
+                            <value>tcrm</value>
                             <value>centos6</value>
                         </array>
                     </property>
