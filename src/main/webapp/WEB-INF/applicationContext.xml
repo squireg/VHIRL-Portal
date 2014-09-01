@@ -56,8 +56,8 @@
         <property name="maxLengthForSeriesNameInSubject" value="15" />
         <property name="maxLengthForJobNameInSubject" value="15" />
         <property name="maxLinesForTail" value="5" />
-        <property name="emailSender"><value><![CDATA[VGL Admin <noreply-cg-admin@csiro.au>]]></value></property>
-        <property name="emailSubject" value="VGL Job (%s/%s)" />
+        <property name="emailSender"><value><![CDATA[VHIRL Admin <noreply-cg-admin@csiro.au>]]></value></property>
+        <property name="emailSubject" value="VHIRL Job (%s/%s)" />
     </bean>
 
 
@@ -199,7 +199,7 @@
         <constructor-arg name="stripExpectHeader" value="true"/>
         <property name="name" value="National eResearch Collaboration Tools and Resources (Queensland)"/>
         <property name="id" value="nectar-openstack-storage-qld"/>
-        <property name="bucket" value="vgl-portal"/>
+        <property name="bucket" value="vl-portal"/>
         <property name="authVersion" value="2.0"/>
     </bean>
 
@@ -213,7 +213,7 @@
         <constructor-arg name="stripExpectHeader" value="true"/>
         <property name="name" value="National eResearch Collaboration Tools and Resources (Melbourne)"/>
         <property name="id" value="nectar-openstack-storage-melb"/>
-        <property name="bucket" value="vgl-portal"/>
+        <property name="bucket" value="vl-portal"/>
         <property name="authVersion" value="2.0"/>
     </bean>
 
@@ -226,7 +226,7 @@
         <constructor-arg name="secretKey" value="${env.nci.nova.secretkey}"/>
         <property name="id" value="nci-openstack-compute"/>
         <property name="name" value="National Computing Infrastructure (Canberra)"/>
-        <property name="groupName" value ="vgl-#{inetAddress.hostName.toLowerCase()}"/>
+        <property name="groupName" value ="vl-#{inetAddress.hostName.toLowerCase()}"/>
         <property name="availableImages">
             <list>
                 <bean class="org.auscope.portal.server.vegl.VglMachineImage">
@@ -256,7 +256,7 @@
         <constructor-arg name="secretKey" value="${env.nectar.nova.secretkey}"/>
         <property name="id" value="necta:wr-openstack-compute"/>
         <property name="name" value="National eResearch Collaboration Tools and Resources"/>
-        <property name="groupName" value ="vgl-#{inetAddress.hostName.toLowerCase()}"/>
+        <property name="groupName" value ="vl-#{inetAddress.hostName.toLowerCase()}"/>
         <property name="availableImages">
             <list>
                 <bean class="org.auscope.portal.server.vegl.VglMachineImage">
@@ -282,7 +282,7 @@
                     </property>
                 </bean>
                 <bean class="org.auscope.portal.server.vegl.VglMachineImage">
-                    <constructor-arg name="imageId" value="Melbourne/8f9f364c-9945-44cd-bd64-5327d04d4489"/>
+                    <constructor-arg name="imageId" value="Melbourne/51dfe9cb-e15e-4672-a4ee-058ad16e5fee"/>
                     <property name="name" value="TCRM"/>
                     <property name="description"><value>A Centos 6 machine with TCRM already installed.</value></property>
                     <property name="keywords">
