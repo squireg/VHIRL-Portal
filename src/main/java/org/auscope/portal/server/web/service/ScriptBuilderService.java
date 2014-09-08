@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class ScriptBuilderService {
-    public static final String SCRIPT_FILE_NAME = "vegl_script.py";
+    public static final String SCRIPT_FILE_NAME = "vl_script.py";
 
     private final Log logger = LogFactory.getLog(getClass());
 
@@ -61,7 +61,7 @@ public class ScriptBuilderService {
         } catch (Exception ex) {
             logger.warn("Unable to lookup job with id " + jobId + ": " + ex.getMessage());
             logger.debug("exception:", ex);
-            throw new PortalServiceException(null, "Unable to lookup job with id " + jobId, ex);
+            throw new PortalServiceException("Unable to lookup job with id " + jobId, ex);
         }
 
         //Apply text contents to job stage in directory
@@ -74,14 +74,14 @@ public class ScriptBuilderService {
         } catch (Exception e) {
             logger.error("Couldn't write script file: " + e.getMessage());
             logger.debug("error: ", e);
-            throw new PortalServiceException(null, "Couldn't write script file for job with id " + jobId, e);
+            throw new PortalServiceException("Couldn't write script file for job with id " + jobId, e);
         } finally {
             FileIOUtil.closeQuietly(scriptFile);
         }
     }
 
     /**
-     * Loads the saved VGL script source with a specified job ID
+     * Loads the saved VL script source with a specified job ID
      * @param jobId
      * @return the file contents if the script file exists otherwise an empty string if the script file doesn't exist or is empty.
      * @throws PortalServiceException
@@ -91,7 +91,7 @@ public class ScriptBuilderService {
         try {
             //Lookup our job
             VEGLJob job = jobManager.getJobById(Integer.parseInt(jobId));
-            //Load script from VGL server's filesystem
+            //Load script from VL server's filesystem
             is = jobFileService.readFile(job, SCRIPT_FILE_NAME);
             String script = null;
             if (is == null) {
