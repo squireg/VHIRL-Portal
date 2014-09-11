@@ -17,6 +17,7 @@
         <developerConnection>scm:git:git@github.com:AuScope/VHIRL-Portal.git</developerConnection>
         <url>https://github.com/AuScope/VHIRL-Portal</url>
     </scm>
+    
 
     <!-- Build Configuration -->
     <organization>
@@ -199,10 +200,20 @@
             <name>AuScope Artifactory - PortalRepo</name>
             <url>https://cgsrv8.arrc.csiro.au/artifactory/PortalRepo</url>
         </repository>
+        <repository>
+            <id>cgsrv8.arrc.csiro.au</id>
+            <name>AuScope Artifactory - externals</name>
+            <url>https://cgsrv8.arrc.csiro.au/artifactory/externals</url>
+        </repository>
     </repositories>
     
     <!-- Dependencies -->
     <dependencies>
+        <dependency>
+            <groupId>proms-clients-java</groupId>
+            <artifactId>proms-clients-java</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>org.auscope.portal</groupId>
             <artifactId>portal-core</artifactId>
