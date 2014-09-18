@@ -209,7 +209,7 @@
             <url>http://maven.geotoolkit.org/</url>
         </repository>
         <repository>
-            <id>cgsrv8.arrc.csiro.au</id>
+            <id>cgsrv8.arrc.csiro.au externals</id>
             <name>AuScope Artifactory - externals</name>
             <url>https://cgsrv8.arrc.csiro.au/artifactory/externals</url>
         </repository>

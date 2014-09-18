@@ -1,6 +1,7 @@
 package org.auscope.portal.server.vegl;
 
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,6 +18,11 @@ import org.auscope.portal.server.web.controllers.BaseCloudController;
 import org.auscope.portal.server.web.controllers.JobBuilderController;
 import org.auscope.portal.server.web.controllers.JobListController;
 import org.springframework.ui.ModelMap;
+
+import au.csiro.promsclient.ProvenanceReporter;
+import au.csiro.promsclient.Report;
+
+import com.sun.jndi.toolkit.url.Uri;
 
 public class VGLJobStatusAndLogReader extends BaseCloudController implements JobStatusReader {
 
@@ -111,7 +117,8 @@ public class VGLJobStatusAndLogReader extends BaseCloudController implements Job
      * Using the services internal to the class, determine the current status of this job. Service failure
      * will return the underlying job status
      */
-    public String getJobStatus(CloudJob cloudJob) {
+    @Override
+	public String getJobStatus(CloudJob cloudJob) {
         //The service hangs onto the underlying job Object but the DB is the point of truth
         //Make sure we get an updated job object first!
         VEGLJob job = jobManager.getJobById(cloudJob.getId());
@@ -141,9 +148,26 @@ public class VGLJobStatusAndLogReader extends BaseCloudController implements Job
         }
 
         boolean jobStarted = containsFile(results, "workflow-version.txt");
-        boolean jobFinished = containsFile(results, JobListController.VGL_LOG_FILE);
+        boolean jobFinished = containsFile(results,
+        		JobListController.VGL_LOG_FILE);
 
         if (jobFinished) {
+        	try {
+        		Report report = job.toReport();
+        		ProvenanceReporter pr = new ProvenanceReporter();
+    			int statusCode = pr.postReport(new Uri(
+    					"http://130.56.250.76/reportingsystem/demosys/report/"
+    					), report);
+    			if (statusCode != 200) {
+    				log.warn(String.format(
+    						"PROMS service returned non-OK code: '%1$s'"
+    						, statusCode));
+    			}
+        	} catch (MalformedURLException e) {
+        		log.warn(String.format(
+        				"Unable to save provenance information... '%1$s'",
+        				e.getLocalizedMessage()));
+        	}
             return JobBuilderController.STATUS_DONE;
         } else if (jobStarted) {
             return JobBuilderController.STATUS_ACTIVE;

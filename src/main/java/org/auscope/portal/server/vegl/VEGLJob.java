@@ -1,5 +1,6 @@
 package org.auscope.portal.server.vegl;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,9 +10,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.auscope.portal.core.cloud.CloudJob;
 import org.auscope.portal.server.vegl.VglParameter.ParameterType;
-import org.auscope.portal.server.web.controllers.JobBuilderController;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+import au.csiro.promsclient.Activity;
+import au.csiro.promsclient.ConfidentialityStatus;
+import au.csiro.promsclient.Entity;
+import au.csiro.promsclient.ExternalReport;
+import au.csiro.promsclient.Report;
+
+import com.sun.jndi.toolkit.url.Uri;
 
 /**
  * A specialisation of a generic cloud job for the VEGL Portal
@@ -246,7 +252,33 @@ public class VEGLJob extends CloudJob implements Cloneable {
                 + description + "]";
     }
 
+    /**
+     * Create a PROMS report for this Job.
+     * @return full report on job (if completed)
+     * @throws MalformedURLException If it can't convert the job url to a Uri.
+     */
+    public final Report toReport() throws MalformedURLException {
+        Uri jobUrl = new Uri(getRegisteredUrl());
+        ArrayList<Entity> inputs = new ArrayList<Entity>();
 
+        for (VglDownload download : jobDownloads) {
+        	Entity entity = new Entity(null, download.getName(),
+        			download.getDescription(), getSubmitDate(),
+        			null, null,
+                    ConfidentialityStatus.Unknown, null, new Uri(download.getUrl().toString()));
+        	inputs.add(entity);
+        }
+
+        ArrayList<Entity> outputs = new ArrayList<Entity>();
+        Activity activity = new Activity(jobUrl, getName(),
+                getDescription(), getUser(),
+                getSubmitDate(), getProcessDate(),
+                inputs, outputs);
+        Report report = new ExternalReport(null, getName(),
+                getDescription(), getSubmitDate(),
+                getProcessDate(), activity);
+        return report;
+    }
 
 
 }
