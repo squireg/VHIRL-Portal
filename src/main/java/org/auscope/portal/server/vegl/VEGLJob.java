@@ -1,6 +1,5 @@
 package org.auscope.portal.server.vegl;
 
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,13 +10,7 @@ import org.apache.commons.logging.LogFactory;
 import org.auscope.portal.core.cloud.CloudJob;
 import org.auscope.portal.server.vegl.VglParameter.ParameterType;
 
-import au.csiro.promsclient.Activity;
-import au.csiro.promsclient.ConfidentialityStatus;
-import au.csiro.promsclient.Entity;
-import au.csiro.promsclient.ExternalReport;
-import au.csiro.promsclient.Report;
 
-import com.sun.jndi.toolkit.url.Uri;
 
 /**
  * A specialisation of a generic cloud job for the VEGL Portal
@@ -51,24 +44,6 @@ public class VEGLJob extends CloudJob implements Cloneable {
     /**
      * Creates a fully initialised VEGLJob
      * @param id ID for this job
-     * @param description Description of this job
-     * @param submitDate The date of submission for this job
-     * @param processDate The date when this job was processed
-     * @param user The username of whoever is running this job
-     * @param emailAddress The contact email for whoever is running this job
-     * @param emailNotification The email notification flag for this job
-     * @param status The descriptive status of this job
-     * @param ec2InstanceId The ID of the running AMI instance (not the actual AMI ID).
-     * @param ec2Endpoint The endpoint for the elastic compute cloud
-     * @param ec2AMI The Amazon Machine Instance ID of the VM type that will run this job
-     * @param cloudOutputAccessKey the access key used to connect to amazon cloud for storing output
-     * @param cloudOutputSecretKey the secret key used to connect to amazon cloud for storing output
-     * @param cloudOutputBucket the cloud bucket name where output will be stored
-     * @param cloudOutputBaseKey the base key path (folder name) for all cloud output
-     * @param registeredUrl Where this job has been registered for future reference
-     * @param fileStorageId The ID of this job that is used for storing input/output files
-     * @param vmSubsetFilePath The File path (on the VM) where the job should look for its input subset file
-     * @param vmSubsetUrl The URL of the actual input subset file
      */
     public VEGLJob(Integer id) {
         super(id);
@@ -76,7 +51,7 @@ public class VEGLJob extends CloudJob implements Cloneable {
 
     /**
      * Sets the processTimeLog
-     * @param String time
+     * @param processTimeLog
      */
     public void setProcessTimeLog(String processTimeLog) {
         this.processTimeLog=processTimeLog;
@@ -132,7 +107,7 @@ public class VEGLJob extends CloudJob implements Cloneable {
 
     /**
      * Sets the email notification flag for this job
-     * @param seriesId
+     * @param emailNotification
      */
     public void setEmailNotification(boolean emailNotification) {
         this.emailNotification = emailNotification;
@@ -250,34 +225,6 @@ public class VEGLJob extends CloudJob implements Cloneable {
         return "VEGLJob [registeredUrl=" + registeredUrl + ", seriesId="
                 + seriesId + ", id=" + id + ", name=" + name + ", description="
                 + description + "]";
-    }
-
-    /**
-     * Create a PROMS report for this Job.
-     * @return full report on job (if completed)
-     * @throws MalformedURLException If it can't convert the job url to a Uri.
-     */
-    public final Report toReport() throws MalformedURLException {
-        Uri jobUrl = new Uri(getRegisteredUrl());
-        ArrayList<Entity> inputs = new ArrayList<Entity>();
-
-        for (VglDownload download : jobDownloads) {
-        	Entity entity = new Entity(null, download.getName(),
-        			download.getDescription(), getSubmitDate(),
-        			null, null,
-                    ConfidentialityStatus.Unknown, null, new Uri(download.getUrl().toString()));
-        	inputs.add(entity);
-        }
-
-        ArrayList<Entity> outputs = new ArrayList<Entity>();
-        Activity activity = new Activity(jobUrl, getName(),
-                getDescription(), getUser(),
-                getSubmitDate(), getProcessDate(),
-                inputs, outputs);
-        Report report = new ExternalReport(null, getName(),
-                getDescription(), getSubmitDate(),
-                getProcessDate(), activity);
-        return report;
     }
 
 

@@ -104,8 +104,7 @@ public class JobBuilderController extends BaseCloudController {
     /**
      * Returns a JSON object containing a populated VEGLJob object.
      *
-     * @param request The servlet request
-     * @param response The servlet response
+     * @param jobId
      *
      * @return A JSON object with a data attribute containing a populated
      *         VEGLJob object and a success attribute.
@@ -137,8 +136,7 @@ public class JobBuilderController extends BaseCloudController {
      * Returns a JSON object containing an array of filenames and sizes which
      * are currently in the job's stage in directory.
      *
-     * @param request The servlet request
-     * @param response The servlet response
+     * @param jobId
      *
      * @return A JSON object with a files attribute which is an array of
      *         filenames.
@@ -237,8 +235,7 @@ public class JobBuilderController extends BaseCloudController {
     /**
      * Deletes one or more uploaded files of the current job.
      *
-     * @param request The servlet request
-     * @param response The servlet response
+     * @param jobId
      *
      * @return A JSON object with a success attribute that indicates whether
      *         the files were successfully deleted.
@@ -266,8 +263,7 @@ public class JobBuilderController extends BaseCloudController {
     /**
      * Deletes one or more job downloads for the current job.
      *
-     * @param request The servlet request
-     * @param response The servlet response
+     * @param jobId
      *
      * @return A JSON object with a success attribute that indicates whether
      *         the downloads were successfully deleted.
@@ -309,8 +305,7 @@ public class JobBuilderController extends BaseCloudController {
     /**
      * Get status of the current job submission.
      *
-     * @param request The servlet request
-     * @param response The servlet response
+     * @param jobId
      *
      * @return A JSON object with a success attribute that indicates the status.
      *
@@ -333,8 +328,7 @@ public class JobBuilderController extends BaseCloudController {
     /**
      * Cancels the current job submission. Called to clean up temporary files.
      *
-     * @param request The servlet request
-     * @param response The servlet response
+     * @param jobId
      *
      * @return null
      */
@@ -391,6 +385,11 @@ public class JobBuilderController extends BaseCloudController {
             HttpServletRequest request,
             @AuthenticationPrincipal PortalUser user) throws ParseException {
 
+        // Note the Agent creating the job: this VHIRL instance
+
+        String requestURL = request.getRequestURL().toString();
+        String serverURL = requestURL.substring(0, requestURL.lastIndexOf("/"));
+
         //Get our job
         VEGLJob job = null;
         try {
@@ -405,6 +404,9 @@ public class JobBuilderController extends BaseCloudController {
             logger.error(String.format("Error creating/fetching job with id %1$s", id), ex);
             return generateJSONResponseMAV(false, null, "Error fetching job with id " + id);
         }
+
+
+
 
         //Update our job from the request parameters
         job.setSeriesId(seriesId);
@@ -462,7 +464,7 @@ public class JobBuilderController extends BaseCloudController {
      * The Nth download object will be defined as a combination of
      * names[N], descriptions[N], urls[N] and localPaths[N]
      *
-     * @param append If true, the parsed downloaded will append themselves to the existing job. If false, they will replace all downloads for the existing job
+     * @param appendString If true, the parsed downloaded will append themselves to the existing job. If false, they will replace all downloads for the existing job
      * @return
      * @throws ParseException
      */
@@ -750,7 +752,7 @@ public class JobBuilderController extends BaseCloudController {
      *
      * The Job MUST be associated with a specific compute and storage service. Staging areas and other bits and pieces relating to the job will also be initialised.
      *
-     * @param email
+     * @param user
      * @return
      */
     private VEGLJob initialiseVEGLJob(HttpSession session, PortalUser user) throws PortalServiceException {

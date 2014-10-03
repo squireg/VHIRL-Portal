@@ -87,7 +87,7 @@ public class VEGLJobManager {
      * will silently fail and log the failure message to error log.
      * @param oldJobStatus
      * @param curJob
-     * @param message
+     * @param exception
      */
     public void createJobAuditTrail(String oldJobStatus, VEGLJob curJob, Exception exception) {
         String message = ExceptionUtils.getStackTrace(exception);
