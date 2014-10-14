@@ -15,6 +15,8 @@ import org.auscope.portal.core.services.cloud.CloudStorageService;
 import org.auscope.portal.core.services.cloud.FileStagingService;
 import org.auscope.portal.server.web.controllers.BaseCloudController;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -29,19 +31,22 @@ import java.util.List;
 /**
  * Created by wis056 on 3/10/2014.
  */
-public class VHIRLProvenanceController extends BaseCloudController {
+@Service
+public class VHIRLProvenanceService { //extends BaseCloudController {
     /** Logger for this class */
-    private static final Log logger = LogFactory.getLog(VHIRLProvenanceController.class);
+    private static final Log logger = LogFactory.getLog(VHIRLProvenanceService
+.class);
     private static final String activityFileName = "activity.ttl";
     private String serverURL = null;
     private static final String PROV = "http://www.w3.org/ns/prov#";
 
     private VHIRLFileStagingService fileStagingService;
+    private CloudStorageService[] cloudStorageServices;
 
-    @Autowired
-    public VHIRLProvenanceController(VHIRLFileStagingService fileStagingService, CloudStorageService[] cloudStorageServices, CloudComputeService[] cloudComputeServices, PortalPropertyPlaceholderConfigurer hostConfigurer) {
-        super(cloudStorageServices, cloudComputeServices, hostConfigurer);
+    public VHIRLProvenanceService(VHIRLFileStagingService fileStagingService, CloudStorageService[] cloudStorageServices) {
         this.fileStagingService = fileStagingService;
+        this.cloudStorageServices = cloudStorageServices;
+
     }
 
     public void createActivity(VEGLJob job, String serverURL) {
@@ -61,7 +66,6 @@ public class VHIRLProvenanceController extends BaseCloudController {
     protected void uploadModel(Model model, VEGLJob job) {
         try {
             File tmpActivity = fileStagingService.createLocalFile(activityFileName, job);
-//            File tmpActivity = File.createTempFile("activity", ".turtle");
             FileWriter fileWriter = new FileWriter(tmpActivity);
             model.write(fileWriter, "TURTLE");
             File[] files = {tmpActivity};
@@ -71,6 +75,15 @@ public class VHIRLProvenanceController extends BaseCloudController {
         } catch (IOException | PortalServiceException e) {
             // JAVA RAGE
         }
+    }
+
+    protected CloudStorageService getStorageService(VEGLJob job) {
+        for (CloudStorageService s : cloudStorageServices) {
+            if (s.getId().equals(job.getStorageServiceId())) {
+                return s;
+            }
+        }
+        return null;
     }
 
     protected String jobURL(VEGLJob job) {

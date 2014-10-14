@@ -22,10 +22,14 @@ public class VGLJobStatusAndLogReader extends BaseCloudController implements Job
 
     private VEGLJobManager jobManager;
 
-    public VGLJobStatusAndLogReader(VEGLJobManager jobManager,
+    private VHIRLProvenanceService vhirlProvenanceService;
+
+    public VGLJobStatusAndLogReader(VEGLJobManager jobManager, VHIRLFileStagingService fileStagingService,
             CloudStorageService[] cloudStorageServices, CloudComputeService[] cloudComputeServices) {
         super(cloudStorageServices, cloudComputeServices);
         this.jobManager = jobManager;
+        this.vhirlProvenanceService = new VHIRLProvenanceService(fileStagingService, cloudStorageServices);
+
     }
 
     /**
@@ -147,6 +151,7 @@ public class VGLJobStatusAndLogReader extends BaseCloudController implements Job
 
         if (jobFinished) {
         	// Provenance goes here.
+
             return JobBuilderController.STATUS_DONE;
         } else if (jobStarted) {
             return JobBuilderController.STATUS_ACTIVE;

@@ -29,7 +29,7 @@
 
     <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
         <property name="driverClassName" value="${jdbc.driverClass}"/>
-        <property name="url" value="${HOST.jdbc.url}"/>
+        <property name="url" value="jdbc:mysql://localhost/veglportal"/>
         <property name="username" value="${env.jdbc.user}"/>
         <property name="password" value="${env.jdbc.password}"/>
     </bean>
@@ -62,6 +62,7 @@
     
 
     <bean name="jobStatusLogReader" class="org.auscope.portal.server.vegl.VGLJobStatusAndLogReader" autowire="constructor"/>
+    <bean name="vhirlProvenanceService" class="org.auscope.portal.server.vegl.VHIRLProvenanceService" autowire="constructor"/>
     <bean name="VGLJobStatusChangeHandler" class="org.auscope.portal.server.web.service.monitor.VGLJobStatusChangeHandler" autowire="constructor"/>
 
     <bean name="jobStatusMonitor" class="org.auscope.portal.core.services.cloud.monitor.JobStatusMonitor">

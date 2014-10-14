@@ -70,6 +70,7 @@ public class JobBuilderController extends BaseCloudController {
     private VEGLJobManager jobManager;
     private FileStagingService fileStagingService;
     private VGLPollingJobQueueManager vglPollingJobQueueManager;
+    private VHIRLProvenanceService vhirlProvenanceService;
 
     public static final String STATUS_PENDING = "Pending";//VT:Request accepted by compute service
     public static final String STATUS_ACTIVE = "Active";//VT:Running
@@ -88,7 +89,7 @@ public class JobBuilderController extends BaseCloudController {
 
 
     @Autowired
-    public JobBuilderController(VEGLJobManager jobManager, FileStagingService fileStagingService,
+    public JobBuilderController(VEGLJobManager jobManager, VHIRLFileStagingService fileStagingService,
             PortalPropertyPlaceholderConfigurer hostConfigurer, CloudStorageService[] cloudStorageServices,
             CloudComputeService[] cloudComputeServices,VGLJobStatusChangeHandler vglJobStatusChangeHandler,VGLPollingJobQueueManager vglPollingJobQueueManager) {
         super(cloudStorageServices, cloudComputeServices,hostConfigurer);
@@ -98,6 +99,7 @@ public class JobBuilderController extends BaseCloudController {
         this.cloudComputeServices = cloudComputeServices;
         this.vglJobStatusChangeHandler=vglJobStatusChangeHandler;
         this.vglPollingJobQueueManager = vglPollingJobQueueManager;
+        this.vhirlProvenanceService = new VHIRLProvenanceService(fileStagingService, cloudStorageServices);
     }
 
 
@@ -662,6 +664,9 @@ public class JobBuilderController extends BaseCloudController {
                             // create our input user data string
                             String userDataString = null;
                             userDataString = createBootstrapForJob(curJob);
+
+                            // PROVENANCE
+                            vhirlProvenanceService.createActivity(curJob, request.getRequestURL().toString());
 
                             oldJobStatus = curJob.getStatus();
                             curJob.setStatus(JobBuilderController.STATUS_PROVISION);
