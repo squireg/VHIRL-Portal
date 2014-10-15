@@ -119,8 +119,8 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>maven-jetty-plugin</artifactId>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
                 <version>${jetty.version}</version>
                 <dependencies>
                     <dependency>
@@ -135,9 +135,9 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <webApp>${project.build.directory}/${project.build.finalName}</webApp>
+                    <war>${project.build.directory}/${project.build.finalName}</war>
                     <scanIntervalSeconds>9999</scanIntervalSeconds>
-                    <contextPath>/</contextPath>
+                    <!--<contextPath>/</contextPath>-->
                 </configuration>
             </plugin>
             <plugin>
@@ -217,7 +217,7 @@
 
     <!-- Project properties -->
     <properties>
-        <jetty.version>6.1.26</jetty.version>
+        <jetty.version>9.2.3.v20140905</jetty.version>
         <spring.version>3.2.10.RELEASE</spring.version>
         <spring.security.version>3.2.4.RELEASE</spring.security.version>
         <hibernate.version>3.2.7.ga</hibernate.version>
