@@ -1,9 +1,10 @@
-package org.auscope.portal.server.vegl;
+package org.auscope.portal.server.web.service;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.auscope.portal.core.cloud.StagingInformation;
 import org.auscope.portal.core.services.cloud.FileStagingService;
+import org.auscope.portal.server.vegl.VEGLJob;
 
 import java.io.File;
 

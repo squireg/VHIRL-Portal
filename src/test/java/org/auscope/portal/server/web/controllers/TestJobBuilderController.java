@@ -36,6 +36,8 @@ import org.auscope.portal.server.vegl.VglDownload;
 import org.auscope.portal.server.vegl.VglMachineImage;
 import org.auscope.portal.server.vegl.VglParameter;
 import org.auscope.portal.server.vegl.mail.JobMailSender;
+import org.auscope.portal.server.web.service.VHIRLFileStagingService;
+import org.auscope.portal.server.web.service.VHIRLProvenanceService;
 import org.auscope.portal.server.web.service.monitor.VGLJobStatusChangeHandler;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -61,7 +63,7 @@ public class TestJobBuilderController {
 
 
     private VEGLJobManager mockJobManager;
-    private FileStagingService mockFileStagingService;
+    private VHIRLFileStagingService mockFileStagingService;
     private CloudStorageService[] mockCloudStorageServices;
     private PortalPropertyPlaceholderConfigurer mockHostConfigurer;
     private CloudComputeService[] mockCloudComputeServices;
@@ -71,6 +73,7 @@ public class TestJobBuilderController {
     private PortalUser mockPortalUser;
     private VGLPollingJobQueueManager vglPollingJobQueueManager;
     private VGLJobStatusChangeHandler vglJobStatusChangeHandler;
+    private VHIRLProvenanceService vhirlProvenanceService;
 
 
 
@@ -84,7 +87,7 @@ public class TestJobBuilderController {
     public void init() {
         //Mock objects required for Object Under Test
         mockJobManager = context.mock(VEGLJobManager.class);
-        mockFileStagingService = context.mock(FileStagingService.class);
+        mockFileStagingService = context.mock(VHIRLFileStagingService.class);
         mockHostConfigurer = context.mock(PortalPropertyPlaceholderConfigurer.class);
         mockPortalUser = context.mock(PortalUser.class);
         mockCloudStorageServices = new CloudStorageService[] {context.mock(CloudStorageService.class)};
@@ -96,12 +99,13 @@ public class TestJobBuilderController {
 
         mockJobMailSender = context.mock(JobMailSender.class);
         mockVGLJobStatusAndLogReader = context.mock(VGLJobStatusAndLogReader.class);
+        vhirlProvenanceService = new VHIRLProvenanceService(mockFileStagingService, mockCloudStorageServices);
 
 
         vglJobStatusChangeHandler = new VGLJobStatusChangeHandler(mockJobManager,mockJobMailSender,mockVGLJobStatusAndLogReader);
         vglPollingJobQueueManager = new VGLPollingJobQueueManager();
         //Object Under Test
-        controller = new JobBuilderController(mockJobManager, mockFileStagingService, mockHostConfigurer, mockCloudStorageServices, mockCloudComputeServices, vglJobStatusChangeHandler,vglPollingJobQueueManager);
+        controller = new JobBuilderController(mockJobManager, mockFileStagingService, mockHostConfigurer, mockCloudStorageServices, mockCloudComputeServices, vglJobStatusChangeHandler,vglPollingJobQueueManager, vhirlProvenanceService);
     }
 
     @After

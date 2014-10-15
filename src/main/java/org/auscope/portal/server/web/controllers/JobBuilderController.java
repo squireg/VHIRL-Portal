@@ -34,6 +34,8 @@ import org.auscope.portal.core.util.FileIOUtil;
 import org.auscope.portal.server.gridjob.FileInformation;
 import org.auscope.portal.server.vegl.*;
 import org.auscope.portal.server.vegl.VglParameter.ParameterType;
+import org.auscope.portal.server.web.service.VHIRLFileStagingService;
+import org.auscope.portal.server.web.service.VHIRLProvenanceService;
 import org.auscope.portal.server.web.service.monitor.VGLJobStatusChangeHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
@@ -63,7 +65,7 @@ public class JobBuilderController extends BaseCloudController {
     private final Log logger = LogFactory.getLog(getClass());
 
     private VEGLJobManager jobManager;
-    private FileStagingService fileStagingService;
+    private FileStagingService vhirlFileStagingService;
     private VGLPollingJobQueueManager vglPollingJobQueueManager;
     private VHIRLProvenanceService vhirlProvenanceService;
 
@@ -84,17 +86,17 @@ public class JobBuilderController extends BaseCloudController {
 
 
     @Autowired
-    public JobBuilderController(VEGLJobManager jobManager, VHIRLFileStagingService fileStagingService,
+    public JobBuilderController(VEGLJobManager jobManager, VHIRLFileStagingService vhirlFileStagingService,
             PortalPropertyPlaceholderConfigurer hostConfigurer, CloudStorageService[] cloudStorageServices,
-            CloudComputeService[] cloudComputeServices,VGLJobStatusChangeHandler vglJobStatusChangeHandler,VGLPollingJobQueueManager vglPollingJobQueueManager) {
+            CloudComputeService[] cloudComputeServices,VGLJobStatusChangeHandler vglJobStatusChangeHandler,VGLPollingJobQueueManager vglPollingJobQueueManager, VHIRLProvenanceService vhirlProvenanceService) {
         super(cloudStorageServices, cloudComputeServices,hostConfigurer);
         this.jobManager = jobManager;
-        this.fileStagingService = fileStagingService;
+        this.vhirlFileStagingService = vhirlFileStagingService;
         this.cloudStorageServices = cloudStorageServices;
         this.cloudComputeServices = cloudComputeServices;
         this.vglJobStatusChangeHandler=vglJobStatusChangeHandler;
         this.vglPollingJobQueueManager = vglPollingJobQueueManager;
-        this.vhirlProvenanceService = new VHIRLProvenanceService(fileStagingService, cloudStorageServices);
+        this.vhirlProvenanceService =  vhirlProvenanceService; // new VHIRLProvenanceService(vhirlFileStagingService, cloudStorageServices);
     }
 
 
@@ -153,7 +155,7 @@ public class JobBuilderController extends BaseCloudController {
         //Get our files
         StagedFile[] files = null;
         try {
-            files = fileStagingService.listStageInDirectoryFiles(job);
+            files = vhirlFileStagingService.listStageInDirectoryFiles(job);
         } catch (Exception ex) {
             logger.error("Error listing job stage in directory", ex);
             return generateJSONResponseMAV(false, null, "Error reading job stage in directory");
@@ -185,7 +187,7 @@ public class JobBuilderController extends BaseCloudController {
 
         //Lookup our job and download the specified files (any exceptions will return a HTTP 503)
         VEGLJob job = jobManager.getJobById(Integer.parseInt(jobId));
-        fileStagingService.handleFileDownload(job, filename, response);
+        vhirlFileStagingService.handleFileDownload(job, filename, response);
         return null;
     }
 
@@ -216,7 +218,7 @@ public class JobBuilderController extends BaseCloudController {
                 
         List<StagedFile> files = new ArrayList<StagedFile>();
         try {
-            files = fileStagingService.handleMultiFileUpload(job, (MultipartHttpServletRequest) request);
+            files = vhirlFileStagingService.handleMultiFileUpload(job, (MultipartHttpServletRequest) request);
         } catch (Exception ex) {
             logger.error("Error uploading file(s)", ex);
             return generateJSONResponseMAV(false, null, "Error uploading file(s)");
@@ -254,7 +256,7 @@ public class JobBuilderController extends BaseCloudController {
         }
 
         for (String fileName : fileNames) {
-            boolean success = fileStagingService.deleteStageInFile(job, fileName);
+            boolean success = vhirlFileStagingService.deleteStageInFile(job, fileName);
             logger.debug("Deleting " + fileName + " success=" + success);
         }
 
@@ -345,7 +347,7 @@ public class JobBuilderController extends BaseCloudController {
             return generateJSONResponseMAV(false, null, "Error fetching job with id " + jobId);
         }
 
-        boolean success = fileStagingService.deleteStageInDirectory(job);
+        boolean success = vhirlFileStagingService.deleteStageInDirectory(job);
         return generateJSONResponseMAV(success, null, "");
     }
 
@@ -647,7 +649,7 @@ public class JobBuilderController extends BaseCloudController {
                     } else {
                         // copy files to S3 storage for processing
                         // get job files from local directory
-                        StagedFile[] stagedFiles = fileStagingService.listStageInDirectoryFiles(curJob);
+                        StagedFile[] stagedFiles = vhirlFileStagingService.listStageInDirectoryFiles(curJob);
                         if (stagedFiles.length == 0) {
                             errorDescription = "There wasn't any input files found for submitting your job for processing.";
                             errorCorrection = "Please upload your input files and try again.";
@@ -812,7 +814,7 @@ public class JobBuilderController extends BaseCloudController {
         jobManager.createJobAuditTrail(null, job, "Job created.");
 
         //Finally generate our stage in directory for persisting inputs
-        fileStagingService.generateStageInDirectory(job);
+        vhirlFileStagingService.generateStageInDirectory(job);
 
         return job;
     }
@@ -830,7 +832,7 @@ public class JobBuilderController extends BaseCloudController {
         OutputStream os = null;
         OutputStreamWriter out = null;
         try {
-            os = fileStagingService.writeFile(job,  fileName);
+            os = vhirlFileStagingService.writeFile(job,  fileName);
             out = new OutputStreamWriter(os);
 
             for (VglDownload dl : job.getJobDownloads()) {
@@ -940,7 +942,7 @@ public class JobBuilderController extends BaseCloudController {
         //Get our files
         StagedFile[] files = null;
         try {
-            files = fileStagingService.listStageInDirectoryFiles(job);
+            files = vhirlFileStagingService.listStageInDirectoryFiles(job);
         } catch (Exception ex) {
             logger.error("Error listing job stage in directory", ex);
             return generateJSONResponseMAV(false, null, "Error reading job stage in directory");
