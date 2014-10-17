@@ -434,6 +434,7 @@ public class JobBuilderController extends BaseCloudController {
         }
 
         //Dont allow the user to specify a cloud compute service that DNE
+        // Updating the compute service means updating the dev keypair
         if (computeServiceId != null) {
             CloudComputeService ccs = getComputeService(computeServiceId);
             if (ccs == null) {
@@ -442,6 +443,7 @@ public class JobBuilderController extends BaseCloudController {
             }
 
             job.setComputeServiceId(computeServiceId);
+            job.setComputeInstanceKey(ccs.getKeypair());
         } else {
             job.setComputeServiceId(null);
         }
@@ -790,7 +792,8 @@ public class JobBuilderController extends BaseCloudController {
         //Load details from
         job.setUser(user.getEmail());
         job.setEmailAddress(user.getEmail());
-        job.setComputeInstanceKey("vgl-developers");
+        // Get keypair name from CloudComputeService later
+        // job.setComputeInstanceKey("vgl-developers");
         job.setName("VL-Job " + new Date().toString());
         job.setDescription("");
         job.setStatus(STATUS_UNSUBMITTED);

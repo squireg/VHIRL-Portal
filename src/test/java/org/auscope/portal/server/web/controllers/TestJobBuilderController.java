@@ -1314,6 +1314,8 @@ public class TestJobBuilderController {
 
             //We should have 1 call to our job manager to create a job audit trail record
             oneOf(mockJobManager).createJobAuditTrail(with(any(String.class)), with(any(VEGLJob.class)), with(any(String.class)));
+
+            oneOf(mockCloudComputeServices[0]).getKeypair();
         }});
 
         ModelAndView mav = controller.updateOrCreateJob(null,  //The integer ID if not specified will trigger job creation
@@ -1372,6 +1374,7 @@ public class TestJobBuilderController {
         final String computeVmType = "compute-vm-type";
         final String newBaseKey = "base/key";
         final boolean emailNotification = true;
+        final String keypair = "vl-developers";
 
         context.checking(new Expectations() {{
             //We should have 1 call to our job manager to get our job object and 1 call to save it
@@ -1394,6 +1397,9 @@ public class TestJobBuilderController {
             oneOf(mockCloudStorageServices[0]).generateBaseKey(mockJob);will(returnValue(newBaseKey));
             //We should have 1 call to save our job
             oneOf(mockJobManager).saveJob(mockJob);
+
+            oneOf(mockCloudComputeServices[0]).getKeypair();will(returnValue(keypair));
+            oneOf(mockJob).setComputeInstanceKey(keypair);
         }});
 
         ModelAndView mav = controller.updateOrCreateJob(jobId,
