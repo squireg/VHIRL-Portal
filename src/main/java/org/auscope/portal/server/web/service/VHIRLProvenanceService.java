@@ -5,6 +5,7 @@ import au.csiro.promsclient.Entity;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.auscope.portal.core.cloud.CloudFileInformation;
@@ -15,10 +16,7 @@ import org.auscope.portal.server.vegl.VglDownload;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -35,6 +33,8 @@ public class VHIRLProvenanceService {
             .class);
     /** Default name for the half-baked provenance uploaded to the cloud. */
     private static final String ACTIVITY_FILE_NAME = "activity.ttl";
+    /** Document type for output. */
+    private static final String TURTLE_FORMAT = "TTL";
     /** URL of the current webserver. Will need to be set by classes
      * using this service. */
     private String serverURL = null;
@@ -69,24 +69,32 @@ public class VHIRLProvenanceService {
      * @param job The Virtual Labs Job we want to report provenance on. It
      *            should be just about to execute, but not yet have started.
      * @param newServerURL The URL of the current webserver. Can be null.
+     * @return The TURTLE text.
      */
-    public final void createActivity(final VEGLJob job, final String
+    public final String createActivity(final VEGLJob job, final String
             newServerURL) {
         if (this.serverURL == null || !this.serverURL.equals(newServerURL)) {
             this.serverURL = newServerURL;
         }
-        String jobURL = jobURL(job);
+        String jobURL = jobURL(job, serverURL);
         Activity vhirlJob = null;
         ArrayList<Entity> inputs = createEntitiesForInputs(job);
         try {
-            vhirlJob = new Activity(new URI(jobURL), job.getName(),
-                    job.getDescription(), serverURL, new Date(), null,
-                    inputs, null);
+            vhirlJob = new Activity()
+                    .setActivityUri(new URI(jobURL))
+                    .setTitle(job.getName())
+                    .setDescription(job.getDescription())
+                    .setWasAttributedTo(serverURL)
+                    .setStartedAtTime(new Date())
+                    .setUsedEntities(inputs);
         } catch (URISyntaxException ex) {
             LOGGER.error(String.format("Error parsing server name %s into URI.",
                     jobURL), ex);
         }
-        uploadModel(vhirlJob.get_graph(), job);
+        uploadModel(vhirlJob.getGraph(), job);
+        StringWriter out = new StringWriter();
+        vhirlJob.getGraph().write(out, TURTLE_FORMAT);
+        return out.toString();
     }
 
     /**
@@ -100,7 +108,8 @@ public class VHIRLProvenanceService {
                 File tmpActivity = vhirlFileStagingService.createLocalFile(
                         ACTIVITY_FILE_NAME, job);
                 FileWriter fileWriter = new FileWriter(tmpActivity);
-                model.write(fileWriter, "TURTLE");
+                model.write(fileWriter, TURTLE_FORMAT);
+                fileWriter.close();
                 File[] files = {tmpActivity};
 
                 CloudStorageService cloudStorageService =
@@ -134,9 +143,10 @@ public class VHIRLProvenanceService {
      * Constructs a full URL which can be used to get information (JSON) about
      * a job.
      * @param job The virtual labs job we want a url for.
+     * @param serverURL URL of the webserver.
      * @return The URL for this job.
      */
-    protected final String jobURL(final VEGLJob job) {
+    protected static String jobURL(final VEGLJob job, final String serverURL) {
         return String.format("%s/getJobObject.do?jobId=%s", serverURL,
                 job.getId());
     }
@@ -145,10 +155,12 @@ public class VHIRLProvenanceService {
      * Get a unique url for this output file.
      * @param job The virtual labs job this output belongs to.
      * @param outputInfo The metadata for the output file.
+     * @param serverURL URL of the webserver.
      * @return A URL for the file. May or may not be public.
      */
-    protected final String outputURL(final VEGLJob job,
-                                     final CloudFileInformation outputInfo) {
+    protected static String outputURL(final VEGLJob job,
+                                     final CloudFileInformation outputInfo,
+                                     final String serverURL) {
         return String.format("%s/secure/jobFile.do?jobId=%s&key=%s", serverURL,
                 job.getId(), outputInfo.getCloudKey());
     }
@@ -182,7 +194,7 @@ public class VHIRLProvenanceService {
      * @param job Completed virtual labs job, about which we will finish our
      *            provenance gathering.
      */
-    public final void createEntitiesForOutputs(final VEGLJob job) {
+    public final String createEntitiesForOutputs(final VEGLJob job) {
         ArrayList<Entity> outputs = new ArrayList<>();
         CloudStorageService cloudStorageService = getStorageService(job);
         CloudFileInformation[] fileInformations = null;
@@ -201,9 +213,11 @@ public class VHIRLProvenanceService {
                     InputStream activityStream =
                             cloudStorageService.getJobFile(job,
                                     ACTIVITY_FILE_NAME);
-                    activity = ModelFactory.createDefaultModel().read(
-                            activityStream, "TURTLE");
-                    resource = activity.getResource(jobURL(job));
+                    activity = ModelFactory.createDefaultModel();
+                    activity.read(activityStream, serverURL, TURTLE_FORMAT);
+                    resource = activity.getResource(jobURL(job, serverURL));
+                    LOGGER.info(activity);
+                    LOGGER.info(resource);
 
                 } else if (names.contains(information.getName())) {
                     // This is an input, do nothing.
@@ -211,7 +225,7 @@ public class VHIRLProvenanceService {
                 } else {
                     // Ah ha! This must be an output.
                     outputs.add(new Entity(new URI(outputURL(
-                            job, information))));
+                            job, information, serverURL))));
                 }
             }
         } catch (PortalServiceException | URISyntaxException ex) {
@@ -220,11 +234,20 @@ public class VHIRLProvenanceService {
                     job.getJobDownloads().toString()), ex);
         }
         for (Entity entity : outputs) {
-            resource.addLiteral(activity.createProperty(PROV + "generated"),
-                    activity.createTypedLiteral(entity.get_id().toString()));
-            activity.add(entity.get_graph());
+            if (resource != null) {
+                resource.addLiteral(activity.createProperty(PROV + "generated"),
+                        activity.createTypedLiteral(entity.get_id().toString()));
+                activity.add(entity.get_graph());
+            }
         }
 
-        uploadModel(activity, job);
+        if (activity != null) {
+            uploadModel(activity, job);
+            StringWriter out = new StringWriter();
+            activity.write(out, TURTLE_FORMAT);
+            return out.toString();
+        } else {
+            return "";
+        }
     }
 }
