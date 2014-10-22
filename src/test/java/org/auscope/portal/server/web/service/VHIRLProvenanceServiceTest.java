@@ -41,8 +41,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
             "      <http://purl.org/dc/elements/1.1/description>\n" +
             "              \"Some job I made.\"^^<http://www.w3.org/2001/XMLSchema#string> ;\n" +
             "      <http://purl.org/dc/elements/1.1/title>\n" +
-            "              \"Cool Job\"^^<http://www.w3.org/2001/XMLSchema#string> ;\n" +
-            "      <http://www.w3.org/ns/prov#startedAtTime>\n";
+            "              \"Cool Job\"^^<http://www.w3.org/2001/XMLSchema#string> ;\n";
 
     final String intermediateTurtle = "<http://www.w3.org/2001/XMLSchema#dateTime> ;\n" +
             "      <http://www.w3.org/ns/prov#used>\n" +
@@ -54,23 +53,22 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
             "      <http://www.w3.org/2000/01/rdf-schema#type>\n" +
             "              \"http://www.w3.org/ns/prov#Entity\" .";
 
-    final String finalTurtle = "<http://www.w3.org/2001/XMLSchema#dateTime> ;\n" +
+    final String dateAttributionTurtle = "<http://www.w3.org/2001/XMLSchema#dateTime> ;\n" +
             "      <http://www.w3.org/ns/prov#used>\n" +
             "              \"http://portal-uploads.vhirl.org/file1\"^^<http://www.w3.org/2001/XMLSchema#string> ;\n" +
             "      <http://www.w3.org/ns/prov#wasAttributedTo>\n" +
-            "              \"http://portal-fake.vhirl.org\"^^<http://www.w3.org/2001/XMLSchema#string> .\n" +
-            "\n" +
+            "              \"http://portal-fake.vhirl.org\"^^<http://www.w3.org/2001/XMLSchema#string> .\n";
+    final String file1Turtle =
             "<http://portal-uploads.vhirl.org/file1>\n" +
             "      <http://www.w3.org/2000/01/rdf-schema#type>\n" +
-            "              \"http://www.w3.org/ns/prov#Entity\" .\n" +
-            "\n" +
-            "<null/getJobObject.do?jobId=1>\n" +
-            "      <http://www.w3.org/ns/prov#generated>\n" +
-            "              \"null/secure/jobFile.do?jobId=1&key=cloudKey\"^^<http://www.w3.org/2001/XMLSchema#string> .\n" +
-            "\n" +
-            "<null/secure/jobFile.do?jobId=1&key=cloudKey>\n" +
+            "              \"http://www.w3.org/ns/prov#Entity\" .\n";
+    final String cloudKeyTurtle =
+            "<http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=cloudKey>\n" +
             "      <http://www.w3.org/2000/01/rdf-schema#type>\n" +
             "              \"http://www.w3.org/ns/prov#Entity\" .";
+    final String generatedTurtle =
+            "      <http://www.w3.org/ns/prov#generated>\n" +
+            "              \"http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=cloudKey\"^^<http://www.w3.org/2001/XMLSchema#string>";
 
 
 
@@ -87,6 +85,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         final File activityFile2 = new File(turtleURL.toURI());
 
         vhirlProvenanceService = new VHIRLProvenanceService(fileServer, storageServices);
+        vhirlProvenanceService.setServerURL(serverURL);
         VglDownload download = new VglDownload(1);
         download.setUrl("http://portal-uploads.vhirl.org/file1");
         downloads.add(download);
@@ -118,7 +117,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
             will(returnValue(cloudList));
             allowing(store).uploadJobFiles(with(any(VEGLJob.class)), with(any(File[].class)));
             allowing(store).getJobFile(preparedJob, activityFileName);
-            will(returnValue(new FileInputStream(activityFile)));
+            will(returnValue(new FileInputStream(activityFile2)));
         }});
     }
 
@@ -131,8 +130,6 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
     public void testCreateActivity() throws Exception {
         String graph = vhirlProvenanceService.createActivity(preparedJob, serverURL);
         Assert.assertTrue(graph.contains(initalTurtle));
-        System.out.println(graph);
-        System.out.println("created");
         Assert.assertTrue(graph.contains(intermediateTurtle));
     }
 
@@ -161,9 +158,10 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
     @Test
     public void testCreateEntitiesForOutputs() throws Exception {
         String graph = vhirlProvenanceService.createEntitiesForOutputs(preparedJob);
-        System.out.println(graph);
-        System.out.println("completed");
         Assert.assertTrue(graph.contains(initalTurtle));
-        Assert.assertTrue(graph.contains(finalTurtle));
+        Assert.assertTrue(graph.contains(dateAttributionTurtle));
+        Assert.assertTrue(graph.contains(file1Turtle));
+        Assert.assertTrue(graph.contains(cloudKeyTurtle));
+        Assert.assertTrue(graph.contains(generatedTurtle));
     }
 }

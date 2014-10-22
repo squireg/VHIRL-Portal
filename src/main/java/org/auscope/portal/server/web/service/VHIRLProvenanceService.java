@@ -35,9 +35,19 @@ public class VHIRLProvenanceService {
     private static final String ACTIVITY_FILE_NAME = "activity.ttl";
     /** Document type for output. */
     private static final String TURTLE_FORMAT = "TTL";
+
     /** URL of the current webserver. Will need to be set by classes
      * using this service. */
     private String serverURL = null;
+
+    public String getServerURL() {
+        return serverURL;
+    }
+
+    public void setServerURL(String serverURL) {
+        this.serverURL = serverURL;
+    }
+
     /** The PROV prefix for some fiddling. */
     private static final String PROV = "http://www.w3.org/ns/prov#";
     /** The service to allow us to write temporary local files. */
@@ -213,11 +223,11 @@ public class VHIRLProvenanceService {
                     InputStream activityStream =
                             cloudStorageService.getJobFile(job,
                                     ACTIVITY_FILE_NAME);
+                    LOGGER.info(activityStream.available());
                     activity = ModelFactory.createDefaultModel();
-                    activity.read(activityStream, serverURL, TURTLE_FORMAT);
-                    resource = activity.getResource(jobURL(job, serverURL));
-                    LOGGER.info(activity);
-                    LOGGER.info(resource);
+                    activity = activity.read(activityStream, serverURL, TURTLE_FORMAT);
+
+                    resource = activity.createResource(jobURL(job, serverURL));
 
                 } else if (names.contains(information.getName())) {
                     // This is an input, do nothing.
@@ -228,7 +238,7 @@ public class VHIRLProvenanceService {
                             job, information, serverURL))));
                 }
             }
-        } catch (PortalServiceException | URISyntaxException ex) {
+        } catch (PortalServiceException | URISyntaxException | IOException ex) {
             LOGGER.error(String.format(
                     "Error parsing data results urls %s into URIs.",
                     job.getJobDownloads().toString()), ex);
@@ -244,7 +254,7 @@ public class VHIRLProvenanceService {
         if (activity != null) {
             uploadModel(activity, job);
             StringWriter out = new StringWriter();
-            activity.write(out, TURTLE_FORMAT);
+            activity.write(out, TURTLE_FORMAT, serverURL);
             return out.toString();
         } else {
             return "";
