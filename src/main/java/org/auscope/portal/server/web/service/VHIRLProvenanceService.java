@@ -1,7 +1,6 @@
 package org.auscope.portal.server.web.service;
 
-import au.csiro.promsclient.Activity;
-import au.csiro.promsclient.Entity;
+import au.csiro.promsclient.*;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -19,9 +18,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by wis056 on 3/10/2014.
@@ -35,6 +32,9 @@ public class VHIRLProvenanceService {
     private static final String ACTIVITY_FILE_NAME = "activity.ttl";
     /** Document type for output. */
     private static final String TURTLE_FORMAT = "TTL";
+
+    private static final String PROMS_URL = "http://proms.csiro.au";
+    private URI PROMSService = null;
 
     /** URL of the current webserver. Will need to be set by classes
      * using this service. */
@@ -69,7 +69,11 @@ public class VHIRLProvenanceService {
                                           newCloudStorageServices) {
         this.vhirlFileStagingService = newVhirlFileStagingService;
         this.cloudStorageServices = newCloudStorageServices;
-
+        try {
+            this.PROMSService = new URI(PROMS_URL);
+        } catch (URISyntaxException e) {
+            LOGGER.error(e.getMessage());
+        }
     }
 
     /**
@@ -88,7 +92,7 @@ public class VHIRLProvenanceService {
         }
         String jobURL = jobURL(job, serverURL);
         Activity vhirlJob = null;
-        ArrayList<Entity> inputs = createEntitiesForInputs(job);
+        Set<Entity> inputs = createEntitiesForInputs(job);
         try {
             vhirlJob = new Activity()
                     .setActivityUri(new URI(jobURL))
@@ -181,11 +185,11 @@ public class VHIRLProvenanceService {
      * @param job The virtual labs job we want to examine the inputs of.
      * @return An array of PROV-O entities. May be empty, but won't be null.
      */
-    public static ArrayList<Entity> createEntitiesForInputs(final VEGLJob job) {
-        ArrayList<Entity> inputs = new ArrayList<>();
+    public static Set<Entity> createEntitiesForInputs(final VEGLJob job) {
+        Set<Entity> inputs = new HashSet<>();
         try {
             for (VglDownload dataset : job.getJobDownloads()) {
-                inputs.add(new Entity(new URI(dataset.getUrl())));
+                inputs.add(new Entity().setEntityUri(new URI(dataset.getUrl())));
             }
         } catch (URISyntaxException ex) {
             LOGGER.error(String.format(
@@ -193,6 +197,12 @@ public class VHIRLProvenanceService {
                     job.getJobDownloads().toString()), ex);
         }
         return inputs;
+    }
+
+    public static void generateAndSaveReport(Activity activity, VEGLJob job, URI PROMSURI) {
+        Report report = new ExternalReport().setActivity(activity);
+        ProvenanceReporter reporter = new ProvenanceReporter();
+        reporter.postReport(PROMSURI, report);
     }
 
     /**
@@ -205,10 +215,10 @@ public class VHIRLProvenanceService {
      *            provenance gathering.
      */
     public final String createEntitiesForOutputs(final VEGLJob job) {
-        ArrayList<Entity> outputs = new ArrayList<>();
+        Set<Entity> outputs = new HashSet<>();
         CloudStorageService cloudStorageService = getStorageService(job);
         CloudFileInformation[] fileInformations = null;
-        Model activity = null;
+        Activity activity = null;
         Resource resource = null;
         try {
             fileInformations = cloudStorageService.listJobFiles(job);
@@ -223,38 +233,42 @@ public class VHIRLProvenanceService {
                     InputStream activityStream =
                             cloudStorageService.getJobFile(job,
                                     ACTIVITY_FILE_NAME);
-                    LOGGER.info(activityStream.available());
-                    activity = ModelFactory.createDefaultModel();
-                    activity = activity.read(activityStream, serverURL, TURTLE_FORMAT);
+                    Model model = ModelFactory.createDefaultModel();
+                    model = model.read(activityStream, serverURL, TURTLE_FORMAT);
+                    activity = new Activity().setActivityUri(new URI(jobURL(job, serverURL))).setFromModel(model);
 
-                    resource = activity.createResource(jobURL(job, serverURL));
+                    resource = model.createResource(jobURL(job, serverURL));
 
                 } else if (names.contains(information.getName())) {
                     // This is an input, do nothing.
                     continue;
                 } else {
                     // Ah ha! This must be an output.
-                    outputs.add(new Entity(new URI(outputURL(
-                            job, information, serverURL))));
+                    URI outputURI = new URI(outputURL(
+                            job, information, serverURL));
+                    outputs.add(new Entity().setEntityUri(outputURI));
                 }
             }
-        } catch (PortalServiceException | URISyntaxException | IOException ex) {
+        } catch (PortalServiceException | URISyntaxException ex) {
             LOGGER.error(String.format(
                     "Error parsing data results urls %s into URIs.",
                     job.getJobDownloads().toString()), ex);
         }
-        for (Entity entity : outputs) {
-            if (resource != null) {
-                resource.addLiteral(activity.createProperty(PROV + "generated"),
-                        activity.createTypedLiteral(entity.get_id().toString()));
-                activity.add(entity.get_graph());
-            }
-        }
+//        for (Entity entity : outputs) {
+//            if (resource != null) {
+//                resource.addLiteral(activity.createProperty(PROV + "generated"),
+//                        activity.createTypedLiteral(entity.get_id().toString()));
+//                activity.add(entity.get_graph());
+//            }
+//        }
+
+        activity = activity.setEndedAtTime(job.getProcessDate()).setGeneratedEntities(outputs);
 
         if (activity != null) {
-            uploadModel(activity, job);
+            uploadModel(activity.getGraph(), job);
+            generateAndSaveReport(activity, job, PROMSService);
             StringWriter out = new StringWriter();
-            activity.write(out, TURTLE_FORMAT, serverURL);
+            activity.getGraph().write(out, TURTLE_FORMAT, serverURL);
             return out.toString();
         } else {
             return "";

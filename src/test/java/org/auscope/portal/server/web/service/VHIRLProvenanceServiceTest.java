@@ -20,6 +20,7 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class VHIRLProvenanceServiceTest extends PortalTestClass {
@@ -88,6 +89,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         vhirlProvenanceService.setServerURL(serverURL);
         VglDownload download = new VglDownload(1);
         download.setUrl("http://portal-uploads.vhirl.org/file1");
+        download.setName("file1");
         downloads.add(download);
         CloudFileInformation cloudFileInformation = new CloudFileInformation(cloudKey, 0, "");
         CloudFileInformation cloudFileModel = new CloudFileInformation(activityFileName, 0, "");
@@ -104,6 +106,8 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
             will(returnValue(jobName));
             allowing(preparedJob).getDescription();
             will(returnValue(jobDescription));
+            allowing(preparedJob).getProcessDate();
+            will(returnValue(new Date()));
 
             allowing(fileInformation).getCloudKey();
             will(returnValue(cloudKey));
