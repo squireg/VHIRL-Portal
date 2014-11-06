@@ -62,7 +62,9 @@
     
 
     <bean name="jobStatusLogReader" class="org.auscope.portal.server.vegl.VGLJobStatusAndLogReader" autowire="constructor"/>
-    <bean name="vhirlProvenanceService" class="org.auscope.portal.server.web.service.VHIRLProvenanceService" autowire="constructor"/>
+    <bean name="vhirlProvenanceService" class="org.auscope.portal.server.web.service.VHIRLProvenanceService" autowire="constructor">
+        <property name="promsUrl" value="${HOST.promsServiceUrl}" />
+    </bean>
 
     <bean name="VGLJobStatusChangeHandler" class="org.auscope.portal.server.web.service.monitor.VGLJobStatusChangeHandler" autowire="constructor"/>
 

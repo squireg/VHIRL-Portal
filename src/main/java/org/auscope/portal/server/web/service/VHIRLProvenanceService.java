@@ -3,8 +3,6 @@ package org.auscope.portal.server.web.service;
 import au.csiro.promsclient.*;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Resource;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.auscope.portal.core.cloud.CloudFileInformation;
@@ -21,7 +19,10 @@ import java.net.URISyntaxException;
 import java.util.*;
 
 /**
- * Created by wis056 on 3/10/2014.
+ * Created by Catherine Wise (wis056) on 3/10/2014.
+ *
+ * A Service for reporting provenance information for storage in a PROMS
+ * instance and also included in downloads.
  */
 @Service
 public class VHIRLProvenanceService {
@@ -32,24 +33,18 @@ public class VHIRLProvenanceService {
     private static final String ACTIVITY_FILE_NAME = "activity.ttl";
     /** Document type for output. */
     private static final String TURTLE_FORMAT = "TTL";
-
-    private static final String PROMS_URL = "http://proms.csiro.au";
+    /* Can be changed in application context */
+    private String promsUrl = "http://proms.csiro.au";
     private URI PROMSService = null;
 
     /** URL of the current webserver. Will need to be set by classes
      * using this service. */
     private String serverURL = null;
 
-    public String getServerURL() {
-        return serverURL;
-    }
-
     public void setServerURL(String serverURL) {
         this.serverURL = serverURL;
     }
 
-    /** The PROV prefix for some fiddling. */
-    private static final String PROV = "http://www.w3.org/ns/prov#";
     /** The service to allow us to write temporary local files. */
     private VHIRLFileStagingService vhirlFileStagingService;
     /** The service to allow us to write files to the cloud. */
@@ -70,7 +65,7 @@ public class VHIRLProvenanceService {
         this.vhirlFileStagingService = newVhirlFileStagingService;
         this.cloudStorageServices = newCloudStorageServices;
         try {
-            this.PROMSService = new URI(PROMS_URL);
+            this.PROMSService = new URI(promsUrl);
         } catch (URISyntaxException e) {
             LOGGER.error(e.getMessage());
         }
@@ -105,9 +100,12 @@ public class VHIRLProvenanceService {
             LOGGER.error(String.format("Error parsing server name %s into URI.",
                     jobURL), ex);
         }
-        uploadModel(vhirlJob.getGraph(), job);
         StringWriter out = new StringWriter();
+        Model graph = vhirlJob.getGraph();
+        if (graph != null) {
+        uploadModel(graph, job);
         vhirlJob.getGraph().write(out, TURTLE_FORMAT);
+        }
         return out.toString();
     }
 
@@ -199,7 +197,7 @@ public class VHIRLProvenanceService {
         return inputs;
     }
 
-    public static void generateAndSaveReport(Activity activity, VEGLJob job, URI PROMSURI) {
+    public static void generateAndSaveReport(Activity activity, URI PROMSURI) {
         Report report = new ExternalReport().setActivity(activity);
         ProvenanceReporter reporter = new ProvenanceReporter();
         reporter.postReport(PROMSURI, report);
@@ -217,12 +215,11 @@ public class VHIRLProvenanceService {
     public final String createEntitiesForOutputs(final VEGLJob job) {
         Set<Entity> outputs = new HashSet<>();
         CloudStorageService cloudStorageService = getStorageService(job);
-        CloudFileInformation[] fileInformations = null;
+        CloudFileInformation[] fileInformationSet;
         Activity activity = null;
-        Resource resource = null;
         try {
-            fileInformations = cloudStorageService.listJobFiles(job);
-            for (CloudFileInformation information : fileInformations) {
+            fileInformationSet = cloudStorageService.listJobFiles(job);
+            for (CloudFileInformation information : fileInformationSet) {
                 List<VglDownload> inputs =  job.getJobDownloads();
                 List<String> names = new ArrayList<>();
                 for (VglDownload input : inputs) {
@@ -236,13 +233,7 @@ public class VHIRLProvenanceService {
                     Model model = ModelFactory.createDefaultModel();
                     model = model.read(activityStream, serverURL, TURTLE_FORMAT);
                     activity = new Activity().setActivityUri(new URI(jobURL(job, serverURL))).setFromModel(model);
-
-                    resource = model.createResource(jobURL(job, serverURL));
-
-                } else if (names.contains(information.getName())) {
-                    // This is an input, do nothing.
-                    continue;
-                } else {
+                } else if (!names.contains(information.getName())) {
                     // Ah ha! This must be an output.
                     URI outputURI = new URI(outputURL(
                             job, information, serverURL));
@@ -254,19 +245,12 @@ public class VHIRLProvenanceService {
                     "Error parsing data results urls %s into URIs.",
                     job.getJobDownloads().toString()), ex);
         }
-//        for (Entity entity : outputs) {
-//            if (resource != null) {
-//                resource.addLiteral(activity.createProperty(PROV + "generated"),
-//                        activity.createTypedLiteral(entity.get_id().toString()));
-//                activity.add(entity.get_graph());
-//            }
-//        }
-
-        activity = activity.setEndedAtTime(job.getProcessDate()).setGeneratedEntities(outputs);
 
         if (activity != null) {
+            activity.setEndedAtTime(job.getProcessDate());
+            activity.setGeneratedEntities(outputs);
             uploadModel(activity.getGraph(), job);
-            generateAndSaveReport(activity, job, PROMSService);
+            generateAndSaveReport(activity, PROMSService);
             StringWriter out = new StringWriter();
             activity.getGraph().write(out, TURTLE_FORMAT, serverURL);
             return out.toString();
