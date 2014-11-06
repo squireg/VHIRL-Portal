@@ -33,6 +33,15 @@ public class VHIRLProvenanceService {
     private static final String ACTIVITY_FILE_NAME = "activity.ttl";
     /** Document type for output. */
     private static final String TURTLE_FORMAT = "TTL";
+
+    public String getPromsUrl() {
+        return promsUrl;
+    }
+
+    public void setPromsUrl(String promsUrl) {
+        this.promsUrl = promsUrl;
+    }
+
     /* Can be changed in application context */
     private String promsUrl = "http://proms.csiro.au";
     private URI PROMSService = null;
