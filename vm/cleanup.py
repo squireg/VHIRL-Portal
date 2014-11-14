@@ -22,7 +22,7 @@ clouds = [{
     "project" : "project",
     "version": 2,
     "auth": "http://130.56.241.100:5000/v2.0",
-    "terminated_state" : unicode("stopped"),
+    "terminated_state" : unicode("shutoff"),
     "error_state" : unicode("error")
     },{
     "name" : "NeCTAR-VHIRL",
@@ -31,7 +31,7 @@ clouds = [{
     "project" : "your-project",
     "auth":"https://keystone.rc.nectar.org.au:5000/v2.0/",
     "version": 2,
-    "terminated_state" : unicode("stopped"),
+    "terminated_state" : unicode("shutoff"),
     "error_state" : unicode("error")
 }]
 
