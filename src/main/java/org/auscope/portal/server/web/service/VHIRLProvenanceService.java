@@ -14,8 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
 
 /**
@@ -51,7 +53,14 @@ public class VHIRLProvenanceService {
     private String serverURL = null;
 
     public void setServerURL(String serverURL) {
-        this.serverURL = serverURL;
+        LOGGER.debug(serverURL);
+        try {
+            URI newURL = new URI(serverURL);
+            LOGGER.debug(newURL.getAuthority());
+            this.serverURL = newURL.getScheme() + ":" + newURL.getAuthority();
+        } catch (URISyntaxException e) {
+            this.serverURL = serverURL;
+        }
     }
 
     /** The service to allow us to write temporary local files. */
@@ -86,14 +95,9 @@ public class VHIRLProvenanceService {
      * and script, but not on the outputs (as they don't exist yet).
      * @param job The Virtual Labs Job we want to report provenance on. It
      *            should be just about to execute, but not yet have started.
-     * @param newServerURL The URL of the current webserver. Can be null.
      * @return The TURTLE text.
      */
-    public final String createActivity(final VEGLJob job, final String
-            newServerURL) {
-        if (this.serverURL == null || !this.serverURL.equals(newServerURL)) {
-            this.serverURL = newServerURL;
-        }
+    public final String createActivity(final VEGLJob job) {
         String jobURL = jobURL(job, serverURL);
         Activity vhirlJob = null;
         Set<Entity> inputs = createEntitiesForInputs(job);
@@ -112,8 +116,8 @@ public class VHIRLProvenanceService {
         StringWriter out = new StringWriter();
         Model graph = vhirlJob.getGraph();
         if (graph != null) {
-        uploadModel(graph, job);
-        vhirlJob.getGraph().write(out, TURTLE_FORMAT);
+            uploadModel(graph, job);
+            vhirlJob.getGraph().write(out, TURTLE_FORMAT);
         }
         return out.toString();
     }
@@ -168,7 +172,7 @@ public class VHIRLProvenanceService {
      * @return The URL for this job.
      */
     protected static String jobURL(final VEGLJob job, final String serverURL) {
-        return String.format("%s/getJobObject.do?jobId=%s", serverURL,
+        return String.format("%s/secure/getJobObject.do?jobId=%s", serverURL,
                 job.getId());
     }
 
@@ -192,12 +196,35 @@ public class VHIRLProvenanceService {
      * @param job The virtual labs job we want to examine the inputs of.
      * @return An array of PROV-O entities. May be empty, but won't be null.
      */
-    public static Set<Entity> createEntitiesForInputs(final VEGLJob job) {
+    public Set<Entity> createEntitiesForInputs(final VEGLJob job) {
         Set<Entity> inputs = new HashSet<>();
+        // Downloads first
         try {
             for (VglDownload dataset : job.getJobDownloads()) {
-                inputs.add(new Entity().setEntityUri(new URI(dataset.getUrl())));
+                inputs.add(new Entity().setEntityUri(
+                        new URI(dataset.getUrl())));
+                LOGGER.debug("New Input: " + dataset.getUrl());
             }
+        } catch (URISyntaxException ex) {
+            LOGGER.error(String.format(
+                    "Error parsing data source urls %s into URIs.",
+                    job.getJobDownloads().toString()), ex);
+        }
+        // Then extra files
+        try {
+            CloudStorageService cloudStorageService = getStorageService(job);
+            CloudFileInformation[] fileInformationSet;
+            fileInformationSet = cloudStorageService.listJobFiles(job);
+            for (CloudFileInformation information : fileInformationSet) {
+                URI inputURI = new URI(outputURL(
+                        job, information, serverURL));
+                LOGGER.debug("New Input: " + inputURI.toString());
+                inputs.add(new Entity().setEntityUri(inputURI));
+            }
+        } catch (PortalServiceException e) {
+            LOGGER.error(String.format(
+                    "Unable to retrieve upload file information for job: %s",
+                    e));
         } catch (URISyntaxException ex) {
             LOGGER.error(String.format(
                     "Error parsing data source urls %s into URIs.",
@@ -215,7 +242,7 @@ public class VHIRLProvenanceService {
     /**
      * Takes a completed job and finishes creating the provenance record, and
      * uploads it to the cloud. The job *must* have had
-     * {@link #createActivity(org.auscope.portal.server.vegl.VEGLJob, String)}
+     * {@link #createActivity(org.auscope.portal.server.vegl.VEGLJob)}
      * called with it already. Otherwise it can't collect the relevant
      * information, and won't do anything.
      * @param job Completed virtual labs job, about which we will finish our
@@ -240,12 +267,17 @@ public class VHIRLProvenanceService {
                             cloudStorageService.getJobFile(job,
                                     ACTIVITY_FILE_NAME);
                     Model model = ModelFactory.createDefaultModel();
-                    model = model.read(activityStream, serverURL, TURTLE_FORMAT);
-                    activity = new Activity().setActivityUri(new URI(jobURL(job, serverURL))).setFromModel(model);
+                    LOGGER.debug("Current server URL: " + serverURL);
+                    model = model.read(activityStream,
+                            serverURL,
+                            TURTLE_FORMAT);
+                    activity = new Activity().setActivityUri(new URI(
+                            jobURL(job, serverURL))).setFromModel(model);
                 } else if (!names.contains(information.getName())) {
-                    // Ah ha! This must be an output.
+                    // Ah ha! This must be an output or input.
                     URI outputURI = new URI(outputURL(
                             job, information, serverURL));
+                    LOGGER.debug("New input/output: " + outputURI.toString());
                     outputs.add(new Entity().setEntityUri(outputURI));
                 }
             }
@@ -257,6 +289,12 @@ public class VHIRLProvenanceService {
 
         if (activity != null) {
             activity.setEndedAtTime(job.getProcessDate());
+            for (Entity potentialOutput : outputs) {
+                if (activity.usedEntities.contains(potentialOutput)) {
+                    outputs.remove(potentialOutput);
+                    LOGGER.debug("Removed input from outputs list: " + potentialOutput);
+                }
+            }
             activity.setGeneratedEntities(outputs);
             uploadModel(activity.getGraph(), job);
             generateAndSaveReport(activity, PROMSService);
