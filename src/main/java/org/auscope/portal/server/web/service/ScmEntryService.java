@@ -10,16 +10,21 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.velocity.app.VelocityEngine;
+import org.auscope.portal.core.cloud.MachineImage;
 import org.auscope.portal.core.services.PortalServiceException;
+import org.auscope.portal.core.services.cloud.CloudComputeService;
 import org.auscope.portal.server.vegl.VEGLJob;
 import org.auscope.portal.server.vegl.VEGLJobManager;
 import org.auscope.portal.server.vegl.VLScmSnapshot;
 import org.auscope.portal.server.vegl.VLScmSnapshotDao;
+import org.auscope.portal.server.web.service.scm.Entries;
+import org.auscope.portal.server.web.service.scm.Problem;
 import org.auscope.portal.server.web.service.scm.Solution;
 import org.auscope.portal.server.web.service.scm.Toolbox;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.velocity.VelocityEngineUtils;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -32,6 +37,8 @@ import org.springframework.web.client.RestTemplate;
 public class ScmEntryService {
     private final Log logger = LogFactory.getLog(getClass());
 
+    public static final String SCM_URL = "http://vhirl-dev.csiro.au/scm";
+
     /** Puppet module template resource */
     protected static final String PUPPET_TEMPLATE =
         "org/auscope/portal/server/web/service/template.pp";
@@ -39,6 +46,7 @@ public class ScmEntryService {
     private VLScmSnapshotDao vlScmSnapshotDao;
     private VelocityEngine velocityEngine;
     private VEGLJobManager jobManager;
+    private CloudComputeService[] cloudComputeServices;
 
     /**
      * Create a new instance.
@@ -46,11 +54,13 @@ public class ScmEntryService {
     @Autowired
     public ScmEntryService(VLScmSnapshotDao vlScmSnapshotDao,
                            VEGLJobManager jobManager,
-                           VelocityEngine velocityEngine) {
+                           VelocityEngine velocityEngine,
+                           CloudComputeService[] cloudComputeServices) {
         super();
         this.vlScmSnapshotDao = vlScmSnapshotDao;
         this.jobManager = jobManager;
         this.setVelocityEngine(velocityEngine);
+        this.cloudComputeServices = cloudComputeServices;
     }
 
     /**
@@ -146,9 +156,99 @@ public class ScmEntryService {
      *
      */
     public Solution getScmSolution(String entryUrl) {
+        Solution solution = null;
         RestTemplate rest = new RestTemplate();
-        Solution solution = rest.getForObject(entryUrl, Solution.class);
+
+        try {
+            solution = rest.getForObject(entryUrl, Solution.class);
+        }
+        catch (RestClientException ex) {
+            logger.error("Failed to get SSC solution (" + entryUrl + ")", ex);
+        }
+
         return solution;
+    }
+
+    /**
+     * Retieve and return listing of all solutions available.
+     *
+     */
+    public List<Solution> getSolutions() {
+        return getSolutions(null);
+    }
+
+    /**
+     * Return the Solutions for a specific Problem.
+     *
+     * @param problem Problem to find Solutions for, or all Solutions if null.
+     * @return List<Solution> list of Solutions if any.
+     *
+     */
+    public List<Solution> getSolutions(Problem problem) {
+        StringBuilder url = new StringBuilder();
+        RestTemplate rest = new RestTemplate();
+        Entries solutions;
+
+        url.append(SCM_URL).append("/solutions");
+        if (problem != null) {
+            url.append("?problem={problem_id}");
+            solutions = rest.getForObject(url.toString(),
+                                          Entries.class,
+                                          problem.getId());
+        }
+        else {
+            solutions = rest.getForObject(url.toString(), Entries.class);
+        }
+
+        return usefulSolutions(solutions.getSolutions());
+    }
+
+    /**
+     * Return list of Solutions in solutions that are usable in this portal.
+     *
+     * Finds Solutions in solutions that can be used in this
+     * portal. Either they refer to at least one image we can use, or
+     * supply the information we need to create an image at runtime.
+     *
+     * Where a Solution has image(s) already, filter the set to those
+     * we can use (currently those that are configured for this
+     * portal).
+     *
+     * @param solutions List<Solution> solutions from the SSC
+     * @return List<Solution> subset of solutions that are usable
+     *
+     */
+    private List<Solution> usefulSolutions(List<Solution> solutions) {
+        ArrayList<Solution> useful = new ArrayList<Solution>();
+
+        // Collect our set of available provider/images
+        Map<String, Set<String>> configuredImages =
+            new HashMap<String, Set<String>>();
+        for (CloudComputeService ccs: cloudComputeServices) {
+            String ccsId = ccs.getId();
+            Set<String> ccsImages = new HashSet<String>();
+            for (MachineImage img: ccs.getAvailableImages()) {
+                ccsImages.add(img.getImageId());
+            }
+            configuredImages.put(ccsId, ccsImages);
+        }
+
+        for (Solution solution: solutions) {
+            // Solution with toolbox with at least one image we have
+            // configured is useful.
+            for (Map<String, String> image:
+                     solution.getToolbox(true).getImages()) {
+                Set<String> validImages =
+                    configuredImages.get(image.get("provider"));
+                if (validImages.contains(image.get("image_id"))) {
+                    logger.info("Useful Solution " + solution.getName() + " has configured image " + image.get("provider") + "/" + image.get("image_id"));
+                    useful.add(solution);
+                    break;
+                }
+            }
+        }
+
+        return useful;
     }
 
     /**
