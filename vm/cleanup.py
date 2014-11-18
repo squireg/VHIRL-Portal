@@ -4,13 +4,14 @@ import logging
 import smtplib
 import socket
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 '''logging.basicConfig(filename='example.log',level=logging.DEBUG)'''
 logging.basicConfig(format='%(asctime)s %(levelname)s  %(message)s', level=logging.WARN)
 logging.root.setLevel(logging.WARN)
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 hostname = socket.gethostname()
 
@@ -64,49 +65,53 @@ def killthemall(connection, cloud):
             if "Power down." in serverConsole \
                     and \
                 "Sending all processes the KILL signal" in serverConsole:
-                logger.warn("[%s] terminating %s, launch time = %s" % (cloud["name"], server.id, server.launch_time))
+                logger.warn("[%s] terminating %s(%s), launch time = %s" % (cloud["name"], server.name, server.id, server.created))
                 logger.debug("[%s] response: %s" % (cloud["name"], server.delete()))
             else:
-                logger.warn("[%s] powerdown not detected %s, launch time = %s" % (cloud["name"], server.id, server.launch_time))
+                logger.warn("[%s] powerdown not detected %s(%s), launch time = %s" % (cloud["name"], server.name, server.id, server.created))
         elif server.status.lower() == "active":
             if "No user-data available" in serverConsole and \
                "Giving up" in serverConsole:
                 logger.warn("Doh! - found a broken one")
                 logger.warn("[%s] terminate error instance: %s (%s)" % (cloud["name"], server.id, server.name))
                 response = server.delete()
-                logger.warn("[%s] deleted %s (%s) - response: %s" % (cloud["name"], server.id, server.name, response))
+                logger.warn("[%s] deleted %s (%s) - response: %s" % (cloud["name"], server.name, server.id, response))
                 tellSomeone(server, cloud, response, serverConsole)
             else:
-                logger.info("[%s] dont terminate %s - it is %s" % (cloud["name"], server.id, server.status))
+                logger.info("[%s] dont terminate %s(%s) - it is %s" % (cloud["name"], server.name, server.id, server.status))
 
         else:
-            logger.info("[%s] dont terminate %s - it is %s" % (cloud["name"], server.id, server.status))
+            logger.info("[%s] dont terminate %s(%s) - it is %s" % (cloud["name"], server.name, server.id, server.status))
 
 def tellSomeone(server, cloud, response, serverConsole):
-    msg = MIMEText( \
+    msg = MIMEMultipart()
+
+    text = MIMEText( \
 """Found another one:
+
 The system has another bad image - %s@%s.
+
 We did try to terminate it.
 Cloud response: %s.
-Regards
-System Ghost @ %s.""" %
+
+Regards,
+System Ghost @ %s.""" % (
                    server.id,
                    cloud,
                    response,
                    hostname
-                   )
+                   ))
     attachment = MIMEText(serverConsole)
     attachment.add_header('Content-Disposition', 'attachment', filename="console.txt")
     msg.attach(attachment)
+    msg.attach(text)
     msg['Subject'] = "BAD Cloud machine"
-    msg['To'] = adminTeam
+    msg['To'] = "cg-portal@csiro.au"
     msg['From'] = "system-ghost@%s" % hostname
-
 
     s = smtplib.SMTP('localhost')
     s.sendmail(msg['From'], [msg['To']], msg.as_string())
     s.quit()
-
 
 if __name__ == "__main__":
     for cloud in clouds:
