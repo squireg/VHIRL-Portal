@@ -91,8 +91,8 @@ public class TestJobBuilderController {
         mockFileStagingService = context.mock(VHIRLFileStagingService.class);
         mockHostConfigurer = context.mock(PortalPropertyPlaceholderConfigurer.class);
         mockPortalUser = context.mock(PortalUser.class);
-        mockCloudStorageServices = new CloudStorageService[] {context.mock(CloudStorageService.class)};
-        mockCloudComputeServices = new CloudComputeService[] {context.mock(CloudComputeService.class)};
+        mockCloudStorageServices = new CloudStorageService[]{context.mock(CloudStorageService.class)};
+        mockCloudComputeServices = new CloudComputeService[]{context.mock(CloudComputeService.class)};
         mockRequest = context.mock(HttpServletRequest.class);
         mockResponse = context.mock(HttpServletResponse.class);
         mockSession = context.mock(HttpSession.class);
@@ -103,10 +103,11 @@ public class TestJobBuilderController {
         vhirlProvenanceService = new VHIRLProvenanceService(mockFileStagingService, mockCloudStorageServices);
         mockScmEntryService = context.mock(ScmEntryService.class);
 
-        vglJobStatusChangeHandler = new VGLJobStatusChangeHandler(mockJobManager,mockJobMailSender,mockVGLJobStatusAndLogReader);
+        vglJobStatusChangeHandler = new VGLJobStatusChangeHandler(mockJobManager, mockJobMailSender, mockVGLJobStatusAndLogReader);
         vglPollingJobQueueManager = new VGLPollingJobQueueManager();
         //Object Under Test
-        controller = new JobBuilderController(mockJobManager, mockFileStagingService, mockHostConfigurer, mockCloudStorageServices, mockCloudComputeServices, vglJobStatusChangeHandler,vglPollingJobQueueManager, mockScmEntryService, vhirlProvenanceService);
+        controller = new JobBuilderController(mockJobManager, mockFileStagingService, mockHostConfigurer, mockCloudStorageServices, mockCloudComputeServices, vglJobStatusChangeHandler, vglPollingJobQueueManager, mockScmEntryService, vhirlProvenanceService);
+    }
 
     @After
     public void destroy(){

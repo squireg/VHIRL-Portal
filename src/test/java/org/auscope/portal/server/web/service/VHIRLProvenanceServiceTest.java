@@ -1,5 +1,7 @@
 package org.auscope.portal.server.web.service;
 
+import au.csiro.promsclient.Activity;
+import au.csiro.promsclient.Entity;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import junit.framework.Assert;
@@ -14,14 +16,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.InputStream;
+import java.io.*;
+import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class VHIRLProvenanceServiceTest extends PortalTestClass {
     VEGLJob preparedJob;
@@ -35,6 +33,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
     final String jobDescription = "Some job I made.";
     final String activityFileName = "activity.ttl";
     List<VglDownload> downloads = new ArrayList<>();
+    VEGLJob turtleJob;
 
     final String initalTurtle = "<http://portal-fake.vhirl.org/getJobObject.do?jobId=1>\n" +
             "      <http://www.w3.org/2000/01/rdf-schema#type>\n" +
@@ -95,6 +94,8 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         CloudFileInformation cloudFileModel = new CloudFileInformation(activityFileName, 0, "");
         final CloudFileInformation[] cloudList = {cloudFileInformation, cloudFileModel};
 
+        turtleJob = context.mock(VEGLJob.class, "Turtle Mock Job");
+
         context.checking(new Expectations() {{
             allowing(preparedJob).getId();
             will(returnValue(jobID));
@@ -122,6 +123,9 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
             allowing(store).uploadJobFiles(with(any(VEGLJob.class)), with(any(File[].class)));
             allowing(store).getJobFile(preparedJob, activityFileName);
             will(returnValue(new FileInputStream(activityFile2)));
+
+            allowing(turtleJob).getId();
+            will(returnValue(19));
         }});
     }
 
@@ -132,7 +136,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
 
     @Test
     public void testCreateActivity() throws Exception {
-        String graph = vhirlProvenanceService.createActivity(preparedJob, serverURL);
+        String graph = vhirlProvenanceService.createActivity(preparedJob);
         Assert.assertTrue(graph.contains(initalTurtle));
         Assert.assertTrue(graph.contains(intermediateTurtle));
     }
@@ -156,7 +160,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
 
     @Test
     public void testCreateEntitiesForInputs() throws Exception {
-        VHIRLProvenanceService.createEntitiesForInputs(preparedJob);
+        vhirlProvenanceService.createEntitiesForInputs(preparedJob);
     }
 
     @Test
@@ -167,5 +171,28 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         Assert.assertTrue(graph.contains(file1Turtle));
         Assert.assertTrue(graph.contains(cloudKeyTurtle));
         Assert.assertTrue(graph.contains(generatedTurtle));
+    }
+
+    @Test
+    public void testSetFromModelBigger() throws Exception {
+        Set<Entity> outputs = new HashSet<>();
+        InputStream activityStream = getClass().getResourceAsStream("/activity.ttl");
+        String serverURL = "http://localhost:8088";
+        Activity activity = null;
+        Model model = ModelFactory.createDefaultModel();
+        System.out.println("Current server URL: " + serverURL);
+        model = model.read(activityStream,
+                vhirlProvenanceService.serverURL(),
+                "TURTLE");
+        activity = new Activity().setActivityUri(new URI(
+                vhirlProvenanceService.jobURL(turtleJob, serverURL))).setFromModel(model);
+        if (activity != null) {
+            activity.setEndedAtTime(new Date());
+            outputs.add(new Entity().setEntityUri(new URI("http://localhost:8088/secure/jobFile.do?jobId=21&key=job-macgo-bt-everbloom_gmail_com-0000000021/1000_yrRP_hazard_map.png")));
+            activity.setGeneratedEntities(outputs);
+            StringWriter out = new StringWriter();
+            activity.getGraph().write(out, "TURTLE", serverURL);
+            System.out.println(out.toString());
+        }
     }
 }
