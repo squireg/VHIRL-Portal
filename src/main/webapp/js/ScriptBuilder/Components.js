@@ -50,8 +50,10 @@ ScriptBuilder.Components.getComponents = function(tree) {
                     }
 
                     // Populate the tree in panel
+                    var root = tree.getRootNode();
+                    root.removeAll(true);
                     for (var t in problems) {
-                        tree.getRootNode().appendChild(problems[t]);
+                        root.appendChild(problems[t]);
                     }
                 } else {
                     console.log("No response");
