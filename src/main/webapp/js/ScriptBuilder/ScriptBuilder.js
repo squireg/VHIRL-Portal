@@ -169,7 +169,7 @@ Ext.define('ScriptBuilder.ScriptBuilder', {
 
     // Select the node corresponding to the current solution
     selectSolution: function() {
-        if (this.wizardState.solutionId !== undefined) {
+        if (!Ext.isEmpty(this.wizardState.solutionId)) {
             var solutionChild = this
                     .componentsPanel
                     .getRootNode()
