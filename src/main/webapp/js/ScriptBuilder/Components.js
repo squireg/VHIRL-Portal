@@ -6,7 +6,7 @@ Ext.ns('ScriptBuilder.Components');
  * Retrieve available templates from the marketplace then populate the
  * panel with the resulting tree.
  */
-ScriptBuilder.Components.getComponents = function(tree) {
+ScriptBuilder.Components.getComponents = function(tree, fn) {
     // http://jupiter-bt.nexus.csiro.au:5000/templates
     // http://localhost:8000/templates
     Ext.Ajax.request({
@@ -55,6 +55,9 @@ ScriptBuilder.Components.getComponents = function(tree) {
                     for (var t in problems) {
                         root.appendChild(problems[t]);
                     }
+
+                    // Call the callback function fn
+                    if (fn) { fn(); }
                 } else {
                     console.log("No response");
 

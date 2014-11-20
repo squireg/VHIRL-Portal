@@ -92,33 +92,39 @@ Ext.define('vegl.jobwizard.forms.JobObjectForm', {
                                 var responseObj = Ext.JSON.decode(action.response.responseText);
 
                                 if (responseObj.success) {
-                                    //Loads the image store of user selected compute provider
+                                    //Loads the image store of user
+                                    //selected compute provider
+                                    var jobData = responseObj.data[0];
                                     jobObjectFrm.computeServicesStore.load({
                                         params : {
-                                            jobId: jobObjectFrm.wizardState.jobId
+                                            jobId: jobData.id
+                                        },
+                                        callback: function(records, operation, success) {
+                                            frm.setValues(jobData);
                                         }
                                     });
 
                                     jobObjectFrm.imageStore.load({
                                         params : {
-                                            computeServiceId : responseObj.data[0].computeServiceId
+                                            computeServiceId : jobData.computeServiceId
+                                        },
+                                        callback: function(records, operation, success) {
+                                            frm.setValues(jobData);
                                         }
                                     });
                                     jobObjectFrm.computeTypeStore.load({
                                         params : {
-                                            computeServiceId : responseObj.data[0].computeServiceId
+                                            computeServiceId : jobData.computeServiceId
                                         },
-                                        scope: jobObjectFrm,
                                         callback: function(records, operation, success) {
                                             jobObjectFrm.preselectVmType();
                                         }
                                     });
 
-                                    frm.setValues(responseObj.data[0]);
-                                    jobObjectFrm.wizardState.jobId = frm.getValues().id;
-
-                                    // Store the vm type if specified in the job
-                                    jobObjectFrm.wizardState.jobComputeInstanceType = responseObj.data[0].computeInstanceType;
+                                    // Store the vm type if specified
+                                    // in the job, and solutionId, for later use.
+                                    jobObjectFrm.wizardState.jobComputeInstanceType = jobData.computeInstanceType;
+                                    jobObjectFrm.wizardState.solutionId = jobData.solutionId;
                                 }
                             }
                         });
@@ -287,24 +293,31 @@ Ext.define('vegl.jobwizard.forms.JobObjectForm', {
 
     preselectVmType: function() {
         var jobObjectFrm = this;
+        var wizardState = this.wizardState;
+        var computeTypeStore = this.computeTypeStore;
+        var computeTypeId = wizardState.jobComputeInstanceType;
+        var frm = jobObjectFrm.getForm();
 
         // Select a vm type that has ncpus
         // >= nthreads if one hasn't
         // already been selected.
-        if (jobObjectFrm.wizardState.nthreads &&
-            !jobObjectFrm.wizardState.jobComputeInstanceType) {
+        if (wizardState.nthreads &&
+            computeTypeId === undefined) {
             // Get vm types that are big enough
             var vmtype;
             var ncpus = 99999;
-            jobObjectFrm.computeTypeStore.each(function(r) {
+            computeTypeStore.each(function(r) {
                 if (r.get('vcpus') < ncpus &&
-                    r.get('vcpus') >= jobObjectFrm.wizardState.nthreads) {
+                    r.get('vcpus') >= wizardState.nthreads) {
                     vmtype = r;
                 }
             });
             if (vmtype) {
-                jobObjectFrm.getForm().setValues({computeTypeId: vmtype.get('id')});
+                frm.setValues({computeTypeId: vmtype.get('id')});
             }
+        }
+        else if (computeTypeId !== undefined) {
+            frm.setValues({computeTypeId: computeTypeId});
         }
     },
 
