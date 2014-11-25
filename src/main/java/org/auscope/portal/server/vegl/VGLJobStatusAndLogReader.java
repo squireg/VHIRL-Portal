@@ -116,7 +116,6 @@ public class VGLJobStatusAndLogReader extends BaseCloudController implements Job
      * Using the services internal to the class, determine the current status of this job. Service failure
      * will return the underlying job status
      */
-    @Override
 	public String getJobStatus(CloudJob cloudJob) {
         //The service hangs onto the underlying job Object but the DB is the point of truth
         //Make sure we get an updated job object first!
