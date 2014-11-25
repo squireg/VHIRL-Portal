@@ -81,7 +81,8 @@ Ext.define('ScriptBuilder.ScriptBuilder', {
         template.requestScript(function(status, script) {
             //Once we have the script text - ask the user what they want to do with it
             if (status === ScriptBuilder.templates.BaseTemplate.TEMPLATE_RESULT_SUCCESS) {
-                me.solution = entry;
+                // Store the selected solution
+                me.setSolution(entry);
 
                 //If there's nothing in the window - just put text in there
                 if (me.getScript().length === 0) {
@@ -114,10 +115,13 @@ Ext.define('ScriptBuilder.ScriptBuilder', {
      */
     buildComponentsPanel : function(selectedToolbox) {
         // Populate the panel after retrieving the templates
-        ScriptBuilder.Components.getComponents(this.componentsPanel);
-
-        // var comps = ScriptBuilder.Components.getComponents(selectedToolbox);
-        // this.componentsPanel.setRootNode(comps);
+        var self = this;
+        ScriptBuilder.Components.getComponents(
+            this.componentsPanel,
+            function() {
+                // If a solution is currently active, select it
+                self.selectSolution();
+            });
     },
 
     /**
@@ -149,6 +153,30 @@ Ext.define('ScriptBuilder.ScriptBuilder', {
     },
 
     getSolutionId: function() {
-        return this.solution.uri;
+        return this.wizardState.solutionId;
+    },
+
+    setSolution: function(solution) {
+        // Store the solution information and select corresponding node
+        this.solution = solution;
+        this.setSolutionId(solution.uri);
+    },
+
+    setSolutionId: function(solutionId) {
+        this.wizardState.solutionId = solutionId;
+        this.selectSolution();
+    },
+
+    // Select the node corresponding to the current solution
+    selectSolution: function() {
+        if (!Ext.isEmpty(this.wizardState.solutionId)) {
+            var solutionChild = this
+                    .componentsPanel
+                    .getRootNode()
+                    .findChild('id', this.wizardState.solutionId, true);
+            if (solutionChild) {
+                this.componentsPanel.selectPath(solutionChild.getPath());
+            }
+        }
     }
 });

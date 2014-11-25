@@ -46,6 +46,9 @@ ScriptBuilder.Components.getComponents = function(tree) {
                             children: children
                         });
                     }
+
+                    // Call the callback function fn
+                    if (fn) { fn(); }
                 } else {
                     console.log("No response");
 
