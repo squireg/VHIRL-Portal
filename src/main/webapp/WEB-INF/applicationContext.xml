@@ -314,14 +314,6 @@
         </property>
     </bean>
 
-    <!--<bean id="fileStagingService" class="org.auscope.portal.core.services.cloud.FileStagingService">
-        <constructor-arg name="stagingInformation">
-            <bean class="org.auscope.portal.core.cloud.StagingInformation">
-                <constructor-arg name="stageInDirectory" value="${HOST.localStageInDir}"/>
-            </bean>
-        </constructor-arg>
-    </bean>-->
-
     <bean name="vhirlFileStagingService" class="org.auscope.portal.server.web.service.VHIRLFileStagingService">
         <constructor-arg name="stagingInformation">
             <bean class="org.auscope.portal.core.cloud.StagingInformation">
