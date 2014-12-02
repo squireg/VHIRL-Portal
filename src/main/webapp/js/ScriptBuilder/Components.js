@@ -6,7 +6,7 @@ Ext.ns('ScriptBuilder.Components');
  * Retrieve available templates from the marketplace then populate the
  * panel with the resulting tree.
  */
-ScriptBuilder.Components.getComponents = function(tree) {
+ScriptBuilder.Components.getComponents = function(tree, fn) {
     // 'http://vhirl-dev.csiro.au/scm/solutions',
     Ext.Ajax.request({
         url : 'getSolutions.do',
@@ -21,6 +21,10 @@ ScriptBuilder.Components.getComponents = function(tree) {
                 var responseObj = Ext.JSON.decode(response.responseText);
                 if (responseObj) {
                     var data, prob_id, children;
+
+                    // Clear existing content in the tree
+                    var root = tree.getRootNode();
+                    root.removeAll(true);
 
                     for (var i in responseObj.data) {
                         var problem = responseObj.data[i];
@@ -38,7 +42,7 @@ ScriptBuilder.Components.getComponents = function(tree) {
                             });
                         }
 
-                        tree.getRootNode().appendChild({
+                        root.appendChild({
                             text: problem.name,
                             type: "category",
                             qtip: problem.description,
