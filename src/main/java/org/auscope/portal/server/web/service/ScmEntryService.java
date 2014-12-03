@@ -211,8 +211,9 @@ public class ScmEntryService {
      * supply the information we need to create an image at runtime.
      *
      * Where a Solution has image(s) already, filter the set to those
-     * we can use (currently those that are configured for this
-     * portal).
+     * we can use. Currently this means at a cloud provider we can
+     * use, and we assume the image already has the portal
+     * infrastructure in place.
      *
      * @param solutions List<Solution> solutions from the SSC
      * @return List<Solution> subset of solutions that are usable
@@ -221,27 +222,18 @@ public class ScmEntryService {
     private List<Solution> usefulSolutions(List<Solution> solutions) {
         ArrayList<Solution> useful = new ArrayList<Solution>();
 
-        // Collect our set of available provider/images
-        Map<String, Set<String>> configuredImages =
-            new HashMap<String, Set<String>>();
+        // Collect our set of available providers
+        Set<String> providers = new HashSet<String>();
         for (CloudComputeService ccs: cloudComputeServices) {
-            String ccsId = ccs.getId();
-            Set<String> ccsImages = new HashSet<String>();
-            for (MachineImage img: ccs.getAvailableImages()) {
-                ccsImages.add(img.getImageId());
-            }
-            configuredImages.put(ccsId, ccsImages);
+            providers.add(ccs.getId());
         }
 
         for (Solution solution: solutions) {
-            // Solution with toolbox with at least one image we have
-            // configured is useful.
+            // Solution with toolbox with at least one image at a
+            // provider we can use is useful.
             for (Map<String, String> image:
                      solution.getToolbox(true).getImages()) {
-                Set<String> validImages =
-                    configuredImages.get(image.get("provider"));
-                if (validImages.contains(image.get("image_id"))) {
-                    logger.info("Useful Solution " + solution.getName() + " has configured image " + image.get("provider") + "/" + image.get("image_id"));
+                if (providers.contains(image.get("provider"))) {
                     useful.add(solution);
                     break;
                 }
