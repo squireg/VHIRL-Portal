@@ -58,8 +58,8 @@ Ext.define('vegl.widgets.JobFilesPanel', {
         showPreview = function(fileName){
         	var mywindow = Ext.create('Ext.window.Window', {
         	    html: '<img src="secure/showImage.do?filename='+jobFilesGrid.getSelectionModel().getSelection()[0].get('name')+'&jobId='+jobFilesGrid.currentJob.get('id')+'&key='+jobFilesGrid.getSelectionModel().getSelection()[0].get('name')+'" />',
-        	    height: 'auto',
-        	    width: 'auto',
+        	    height: window.innerHeight*.8,
+        	    width: window.innerWidth*.8,
         	    layout: 'fit',
         	    maxHeight: window.innerHeight*.8,
         	    maxWidth: window.innerWidth*.8,
