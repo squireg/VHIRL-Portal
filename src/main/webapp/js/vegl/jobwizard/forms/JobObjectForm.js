@@ -92,33 +92,41 @@ Ext.define('vegl.jobwizard.forms.JobObjectForm', {
                                 var responseObj = Ext.JSON.decode(action.response.responseText);
 
                                 if (responseObj.success) {
-                                    //Loads the image store of user selected compute provider
+                                    //Loads the image store of user
+                                    //selected compute provider
+                                    var jobData = responseObj.data[0];
                                     jobObjectFrm.computeServicesStore.load({
                                         params : {
-                                            jobId: jobObjectFrm.wizardState.jobId
-                                        }
-                                    });
-
-                                    jobObjectFrm.imageStore.load({
-                                        params : {
-                                            computeServiceId : responseObj.data[0].computeServiceId
-                                        }
-                                    });
-                                    jobObjectFrm.computeTypeStore.load({
-                                        params : {
-                                            computeServiceId : responseObj.data[0].computeServiceId
+                                            jobId: jobData.id
                                         },
-                                        scope: jobObjectFrm,
                                         callback: function(records, operation, success) {
-                                            jobObjectFrm.preselectVmType();
+                                            frm.setValues(jobData);
                                         }
                                     });
 
-                                    frm.setValues(responseObj.data[0]);
-                                    jobObjectFrm.wizardState.jobId = frm.getValues().id;
+                                    if (!Ext.isEmpty(jobData.computeServiceId)) {
+                                        jobObjectFrm.imageStore.load({
+                                            params : {
+                                                computeServiceId : jobData.computeServiceId
+                                            },
+                                            callback: function(records, operation, success) {
+                                                frm.setValues(jobData);
+                                            }
+                                        });
+                                        jobObjectFrm.computeTypeStore.load({
+                                            params : {
+                                                computeServiceId : jobData.computeServiceId
+                                            },
+                                            callback: function(records, operation, success) {
+                                                jobObjectFrm.preselectVmType();
+                                            }
+                                        });
+                                    }
 
-                                    // Store the vm type if specified in the job
-                                    jobObjectFrm.wizardState.jobComputeInstanceType = responseObj.data[0].computeInstanceType;
+                                    // Store the vm type if specified
+                                    // in the job, and solutionId, for later use.
+                                    jobObjectFrm.wizardState.jobComputeInstanceType = jobData.computeInstanceType;
+                                    jobObjectFrm.wizardState.solutionId = jobData.solutionId;
                                 }
                             }
                         });
@@ -265,10 +273,12 @@ Ext.define('vegl.jobwizard.forms.JobObjectForm', {
             return;
         }
 
+        var computeServiceId = records[0].get('id');
+
         this.getComponent('image-combo').clearValue();
         this.imageStore.load({
             params : {
-                computeServiceId : records[0].get('id'),
+                computeServiceId : computeServiceId,
                 jobId: this.wizardState.jobId
             }
         });
@@ -276,7 +286,7 @@ Ext.define('vegl.jobwizard.forms.JobObjectForm', {
         var jobObjectFrm = this;
         this.computeTypeStore.load({
             params : {
-                computeServiceId : records[0].get('id')
+                computeServiceId : computeServiceId
             },
             scope: jobObjectFrm,
             callback: function(records, operation, success) {
@@ -287,23 +297,30 @@ Ext.define('vegl.jobwizard.forms.JobObjectForm', {
 
     preselectVmType: function() {
         var jobObjectFrm = this;
+        var wizardState = this.wizardState;
+        var computeTypeStore = this.computeTypeStore;
+        var computeTypeId = wizardState.jobComputeInstanceType;
+        var frm = jobObjectFrm.getForm();
 
         // Select a vm type that has ncpus
         // >= nthreads if one hasn't
         // already been selected.
-        if (jobObjectFrm.wizardState.nthreads &&
-            !jobObjectFrm.wizardState.jobComputeInstanceType) {
+        if (!Ext.isEmpty(computeTypeId)) {
+            frm.setValues({computeTypeId: computeTypeId});
+        }
+        else if (wizardState.nthreads) {
             // Get vm types that are big enough
-            var vmtype;
+            var vmtype, vcpus;
             var ncpus = 99999;
-            jobObjectFrm.computeTypeStore.each(function(r) {
-                if (r.get('vcpus') < ncpus &&
-                    r.get('vcpus') >= jobObjectFrm.wizardState.nthreads) {
+            computeTypeStore.each(function(r) {
+                vcpus = r.get('vcpus');
+                if (vcpus < ncpus && vcpus >= wizardState.nthreads) {
                     vmtype = r;
+                    ncpus = vcpus;
                 }
             });
             if (vmtype) {
-                jobObjectFrm.getForm().setValues({computeTypeId: vmtype.get('id')});
+                frm.setValues({computeTypeId: vmtype.get('id')});
             }
         }
     },
