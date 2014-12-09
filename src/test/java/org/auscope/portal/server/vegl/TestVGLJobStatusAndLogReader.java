@@ -1,8 +1,10 @@
 package org.auscope.portal.server.vegl;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import junit.framework.Assert;
 
@@ -127,19 +129,26 @@ public class TestVGLJobStatusAndLogReader extends PortalTestClass {
 				new CloudFileInformation("key3/vl.sh.log", 102L, "http://public.url3/filename3"),
 		};
 
+		final List<VglDownload> downloads = new ArrayList<>();
+		VglDownload download = new VglDownload(1);
+		download.setUrl("http://portal-uploads.vhirl.org/file1");
+		download.setName("file1");
+		downloads.add(download);
+
 		context.checking(new Expectations() {{
 			oneOf(mockJobManager).getJobById(mockJobId);will(returnValue(mockJob));
 			allowing(mockJob).getId();will(returnValue(mockJobId));
 			allowing(mockJob).getStatus();will(returnValue(mockJobStatus));
 			allowing(mockJob).getStorageServiceId();will(returnValue(storageServiceId));
 			allowing(mockCloudStorageServices[0]).getId();will(returnValue(storageServiceId));
-			oneOf(mockCloudStorageServices[0]).listJobFiles(with(mockJob));will(returnValue(jobDoneFiles));
+			allowing(mockCloudStorageServices[0]).listJobFiles(with(mockJob));will(returnValue(jobDoneFiles));
 			allowing(mockJob).getRegisteredUrl();will(returnValue(mockUrl));
 			allowing(mockJob).getName();will(returnValue("Job Name"));
 			allowing(mockJob).getDescription();will(returnValue("Job Description"));
 			allowing(mockJob).getSubmitDate();will(returnValue(mockStartDate));
 			allowing(mockJob).getUser();will(returnValue("Jane Ng"));
 			allowing(mockJob).getProcessDate();will(returnValue(mockEndDate));
+			allowing(mockJob).getJobDownloads();will(returnValue(downloads));
 		}});
 
 		String status = jobStatLogReader.getJobStatus(mockJob);

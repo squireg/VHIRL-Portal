@@ -18,6 +18,7 @@ import javax.servlet.http.HttpSession;
 import junit.framework.Assert;
 
 import org.apache.commons.collections.iterators.IteratorEnumeration;
+import org.auscope.portal.core.cloud.CloudFileInformation;
 import org.auscope.portal.core.cloud.ComputeType;
 import org.auscope.portal.core.cloud.StagedFile;
 import org.auscope.portal.core.server.PortalPropertyPlaceholderConfigurer;
@@ -613,6 +614,13 @@ public class TestJobBuilderController {
         final String storageAuthVersion = "1.2.3";
         final String regionName = null;
 
+
+        final File activityFile = File.createTempFile("activity", ".ttl");
+        final String activityFileName = "activity.ttl";
+        final CloudFileInformation cloudFileInformation = new CloudFileInformation("one", 0, "");
+        CloudFileInformation cloudFileModel = new CloudFileInformation("two", 0, "");
+        final CloudFileInformation[] cloudList = {cloudFileInformation, cloudFileModel};
+
         jobObj.setComputeVmId(computeVmId);
         jobObj.setStatus(jobInSavedState); // by default, the job is in SAVED state
         jobObj.setStorageBaseKey("base/key");
@@ -625,6 +633,7 @@ public class TestJobBuilderController {
             oneOf(mockImages[0]).getImageId();will(returnValue("compute-vmi-id"));
             oneOf(mockImages[0]).getPermissions();will(returnValue(new String[] {"testRole2"}));
             allowing(mockRequest).isUserInRole("testRole2");will(returnValue(true));
+            oneOf(mockRequest).getRequestURL();will(returnValue(new StringBuffer("http://mock.fake/secure/something")));
 
             //We should have 1 call to our job manager to get our job object and 1 call to save it
             oneOf(mockJobManager).getJobById(jobObj.getId());will(returnValue(jobObj));
@@ -637,6 +646,12 @@ public class TestJobBuilderController {
             //We should have 1 call to get our stage in files
             oneOf(mockFileStagingService).listStageInDirectoryFiles(jobObj);will(returnValue(stageInFiles));
             inSequence(jobFileSequence);
+
+
+            oneOf(mockCloudStorageServices[0]).listJobFiles(with(equal(jobObj)));will(returnValue(cloudList));
+            allowing(mockFileStagingService).createLocalFile(activityFileName, jobObj);
+            will(returnValue(activityFile));
+            allowing(mockCloudStorageServices[0]).uploadJobFiles(with(any(VEGLJob.class)), with(any(File[].class)));
 
             //We allow calls to the Configurer which simply extract values from our property file
             allowing(mockHostConfigurer).resolvePlaceholder(with(any(String.class)));
@@ -667,6 +682,9 @@ public class TestJobBuilderController {
             //We should have 1 call to our job manager to create a job audit trail record
             oneOf(mockJobManager).createJobAuditTrail(jobInSavedState, jobObj, "Set job to provisioning");
             oneOf(mockJobManager).createJobAuditTrail("Provisioning", jobObj, "Set job to Pending");
+
+
+            oneOf(mockRequest).getRequestURL();will(returnValue(new StringBuffer("http://mock.fake/secure/something")));
 
         }});
 
@@ -827,6 +845,13 @@ public class TestJobBuilderController {
         final String regionName = "region-name";
         final PortalServiceException exception = new PortalServiceException("Some random error","Some error correction");
 
+
+        final File activityFile = File.createTempFile("activity", ".ttl");
+        final String activityFileName = "activity.ttl";
+        final CloudFileInformation cloudFileInformation = new CloudFileInformation("one", 0, "");
+        CloudFileInformation cloudFileModel = new CloudFileInformation("two", 0, "");
+        final CloudFileInformation[] cloudList = {cloudFileInformation, cloudFileModel};
+
         jobObj.setComputeVmId(computeVmId);
         //As submitJob method no longer explicitly checks for empty storage credentials,
         //we need to manually set the storageBaseKey property to avoid NullPointerException
@@ -843,6 +868,11 @@ public class TestJobBuilderController {
             oneOf(mockFileStagingService).writeFile(jobObj, JobBuilderController.DOWNLOAD_SCRIPT);
             will(returnValue(mockOutputStream));
             allowing(mockOutputStream).close();
+
+            oneOf(mockCloudStorageServices[0]).listJobFiles(with(equal(jobObj)));will(returnValue(cloudList));
+            allowing(mockFileStagingService).createLocalFile(activityFileName, jobObj);
+            will(returnValue(activityFile));
+            allowing(mockCloudStorageServices[0]).uploadJobFiles(with(any(VEGLJob.class)), with(any(File[].class)));
 
             //We should have 1 call to get our stage in files
             oneOf(mockFileStagingService).listStageInDirectoryFiles(jobObj);will(returnValue(stageInFiles));
@@ -882,6 +912,8 @@ public class TestJobBuilderController {
             oneOf(mockJobManager).createJobAuditTrail(JobBuilderController.STATUS_PROVISION, jobObj, exception);
 
             oneOf(mockJobManager).createJobAuditTrail(JobBuilderController.STATUS_PROVISION, jobObj, "Job status updated.");
+
+            oneOf(mockRequest).getRequestURL();will(returnValue(new StringBuffer("http://mock.fake/secure/something")));
 
             oneOf(mockJobMailSender).sendMail(jobObj);
             oneOf(mockVGLJobStatusAndLogReader).getSectionedLog(jobObj, "Time");
@@ -929,6 +961,13 @@ public class TestJobBuilderController {
         final String storageServiceId = "storage-service-id";
         final String regionName = "region-name";
 
+        final File activityFile = File.createTempFile("activity", ".ttl");
+        final String activityFileName = "activity.ttl";
+        final CloudFileInformation cloudFileInformation = new CloudFileInformation("one", 0, "");
+        CloudFileInformation cloudFileModel = new CloudFileInformation("two", 0, "");
+        final CloudFileInformation[] cloudList = {cloudFileInformation, cloudFileModel};
+
+
         jobObj.setComputeVmId(computeVmId);
         //As submitJob method no longer explicitly checks for empty storage credentials,
         //we need to manually set the storageBaseKey property to avoid NullPointerException
@@ -948,6 +987,11 @@ public class TestJobBuilderController {
 
             //We should have 1 call to get our stage in files
             oneOf(mockFileStagingService).listStageInDirectoryFiles(jobObj);will(returnValue(stageInFiles));
+
+            oneOf(mockCloudStorageServices[0]).listJobFiles(with(equal(jobObj)));will(returnValue(cloudList));
+            allowing(mockFileStagingService).createLocalFile(activityFileName, jobObj);
+            will(returnValue(activityFile));
+            allowing(mockCloudStorageServices[0]).uploadJobFiles(with(any(VEGLJob.class)), with(any(File[].class)));
 
             //We allow calls to the Configurer which simply extract values from our property file
             allowing(mockHostConfigurer).resolvePlaceholder(with(any(String.class)));
@@ -981,7 +1025,10 @@ public class TestJobBuilderController {
             //We should have 1 call to our job manager to create a job audit trail record
             oneOf(mockJobManager).createJobAuditTrail(jobInSavedState, jobObj, "Set job to provisioning");
 
+            oneOf(mockRequest).getRequestURL();will(returnValue(new StringBuffer("http://mock.fake/secure/something")));
+
             oneOf(mockJobManager).createJobAuditTrail(JobBuilderController.STATUS_PROVISION, jobObj, "Job Placed in Queue");
+
 
         }});
 
@@ -1317,6 +1364,8 @@ public class TestJobBuilderController {
             oneOf(mockJobManager).saveJob(with(any(VEGLJob.class))); //one save to finalise initialisation
             oneOf(mockJobManager).saveJob(with(any(VEGLJob.class))); //one save to include updates
 
+            oneOf(mockRequest).getRequestURL();will(returnValue(new StringBuffer("http://mock.fake/secure/something")));
+
             //We should have 1 call to our job manager to create a job audit trail record
             oneOf(mockJobManager).createJobAuditTrail(with(any(String.class)), with(any(VEGLJob.class)), with(any(String.class)));
         }});
@@ -1396,6 +1445,8 @@ public class TestJobBuilderController {
             allowing(mockCloudComputeServices[0]).getId();will(returnValue("computeServiceId"));
             allowing(mockCloudStorageServices[0]).getId();will(returnValue("storageServiceId"));
 
+            oneOf(mockRequest).getRequestURL();will(returnValue(new StringBuffer("http://mock.fake/secure/something")));
+
             oneOf(mockCloudStorageServices[0]).generateBaseKey(mockJob);will(returnValue(newBaseKey));
             //We should have 1 call to save our job
             oneOf(mockJobManager).saveJob(mockJob);
@@ -1441,6 +1492,8 @@ public class TestJobBuilderController {
 
             allowing(mockCloudComputeServices[0]).getId();will(returnValue("computeServiceId"));
             allowing(mockCloudStorageServices[0]).getId();will(returnValue("computeStorageId"));
+
+            oneOf(mockRequest).getRequestURL();will(returnValue(new StringBuffer("http://mock.fake/secure/something")));
 
             //We should have 1 call to save our job but will throw Exception
             oneOf(mockJobManager).saveJob(mockJob);will(throwException(new Exception("")));
@@ -1491,6 +1544,8 @@ public class TestJobBuilderController {
             allowing(mockCloudComputeServices[0]).getId();will(returnValue("computeServiceId"));
             allowing(mockCloudStorageServices[0]).getId();will(returnValue("computeStorageId-thatDNE"));
 
+            oneOf(mockRequest).getRequestURL();will(returnValue(new StringBuffer("http://mock.fake/secure/something")));
+
             //We should have 1 call to save our job
             oneOf(mockJobManager).saveJob(mockJob);
         }});
@@ -1539,6 +1594,8 @@ public class TestJobBuilderController {
 
             allowing(mockCloudComputeServices[0]).getId();will(returnValue("computeServiceId-thatDNE"));
             allowing(mockCloudStorageServices[0]).getId();will(returnValue("computeStorageId"));
+
+            oneOf(mockRequest).getRequestURL();will(returnValue(new StringBuffer("http://mock.fake/secure/something")));
 
             //We should have 1 call to save our job
             oneOf(mockJobManager).saveJob(mockJob);
