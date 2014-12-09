@@ -228,6 +228,7 @@ public class VHIRLProvenanceService {
             CloudStorageService cloudStorageService = getStorageService(job);
             CloudFileInformation[] fileInformationSet;
             fileInformationSet = cloudStorageService.listJobFiles(job);
+
             for (CloudFileInformation information : fileInformationSet) {
                 URI inputURI = new URI(outputURL(
                         job, information, serverURL()));
