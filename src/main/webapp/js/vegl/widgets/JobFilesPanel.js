@@ -54,6 +54,29 @@ Ext.define('vegl.widgets.JobFilesPanel', {
             }
         });
 
+        
+        showPreview = function(fileName){
+        	var mywindow = Ext.create('Ext.window.Window', {
+        	    html: '<img src="secure/showImage.do?filename='+jobFilesGrid.getSelectionModel().getSelection()[0].get('name')+'&jobId='+jobFilesGrid.currentJob.get('id')+'&key='+jobFilesGrid.getSelectionModel().getSelection()[0].get('name')+'" />',
+        	    height: window.innerHeight*.8,
+        	    width: window.innerWidth*.8,
+        	    layout: 'fit',
+        	    maxHeight: window.innerHeight*.8,
+        	    maxWidth: window.innerWidth*.8,
+        	    autoScroll: true,
+    	        listeners : {
+    	            onload : {
+    	                fn : function() {
+    	                		this.setSize(null, null);
+    	                }
+    	            }
+    	        }
+
+        	}).show();
+
+        	return false;
+        }
+        
         Ext.apply(config, {
             plugins : [{
                 ptype : 'rowcontextmenu',
@@ -81,7 +104,13 @@ Ext.define('vegl.widgets.JobFilesPanel', {
                     }
                 }
             }),
-            columns: [{ header: 'Filename', width: 200, sortable: true, dataIndex: 'name'},
+            columns: [{ header: 'Filename', width: 200, sortable: true, dataIndex: 'name', renderer: function(fileName){
+            	if (fileName.indexOf(".png")==fileName.length-4) {
+            		return fileName+" <a href='#' onClick='showPreview()'><img src='img/magglass.gif'></a>";
+            		
+            	}
+            	return ""+fileName+"";
+            	}},
                       { header: 'Size', width: 100, sortable: true, dataIndex: 'size', renderer: Ext.util.Format.fileSize, align: 'right'}],
             tbar: [{
                 text: 'Actions',
