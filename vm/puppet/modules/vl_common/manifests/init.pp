@@ -1,9 +1,13 @@
 # Installs common VL dependencies for Centos
 # Depends on the stahnma/epel module and python_pip module
 
+include epel
+include puppi
+include python_pip
+
 class vl_common {
-  # Install default packages
-  package { ["curl", "wget", "subversion", "mercurial", "ftp", "bzip2",
+  # Install default packages (curl/wget declared in puppi)
+  package { ["subversion", "mercurial", "ftp", "bzip2",
              "bzip2-devel", "elfutils", "ntp", "ntpdate", "gcc", "gcc-c++",
              "gcc-gfortran", "compat-gcc-34-g77", "make", "openssh",
              "openssh-clients", "swig", "mlocate", "libxml2-devel",
