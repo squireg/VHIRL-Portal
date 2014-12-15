@@ -1,0 +1,41 @@
+<http://localhost:8088/secure/getJobObject.do?jobId=19>
+      <http://www.w3.org/2000/01/rdf-schema#type>
+              "http://www.w3.org/ns/prov#Activity" ;
+      <http://purl.org/dc/elements/1.1/description>
+              "ANUGA!"^^<http://www.w3.org/2001/XMLSchema#string> ;
+      <http://purl.org/dc/elements/1.1/title>
+              "ANUGA Again"^^<http://www.w3.org/2001/XMLSchema#string> ;
+      <http://www.w3.org/ns/prov#startedAtTime>
+              "2014-11-18T09:51:09+11:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+      <http://www.w3.org/ns/prov#used>
+              "http://localhost:8088/secure/jobFile.do?jobId=19&key=job-macgo-bt-everbloom_gmail_com-0000000019/vl_script.py"^^<http://www.w3.org/2001/XMLSchema#string> , "http://localhost:8088/secure/jobFile.do?jobId=19&key=job-macgo-bt-everbloom_gmail_com-0000000019/busselton_1km.csv"^^<http://www.w3.org/2001/XMLSchema#string> , "http://localhost:8088/secure/jobFile.do?jobId=19&key=job-macgo-bt-everbloom_gmail_com-0000000019/vl-download.sh"^^<http://www.w3.org/2001/XMLSchema#string> , "http://localhost:8088/secure/jobFile.do?jobId=19&key=job-macgo-bt-everbloom_gmail_com-0000000019/busselton_20m.csv"^^<http://www.w3.org/2001/XMLSchema#string> , "http://localhost:8088/secure/jobFile.do?jobId=19&key=job-macgo-bt-everbloom_gmail_com-0000000019/busselton_extent_edit.csv"^^<http://www.w3.org/2001/XMLSchema#string> , "http://siss2.anu.edu.au/erddap/griddap/elevation.nc?elevation%5B(-33.530970094812595):1:(-33.07185712811731)%5D%5B(114.95404886315322):1:(115.66816019128255)%5D"^^<http://www.w3.org/2001/XMLSchema#string> , "http://localhost:8088/secure/jobFile.do?jobId=19&key=job-macgo-bt-everbloom_gmail_com-0000000019/bunbury_1km_extend.csv"^^<http://www.w3.org/2001/XMLSchema#string> ;
+      <http://www.w3.org/ns/prov#wasAttributedTo>
+              "http://localhost:8088"^^<http://www.w3.org/2001/XMLSchema#string> .
+
+<http://localhost:8088/secure/jobFile.do?jobId=19&key=job-macgo-bt-everbloom_gmail_com-0000000019/vl_script.py>
+      <http://www.w3.org/2000/01/rdf-schema#type>
+              "http://www.w3.org/ns/prov#Entity" .
+
+<http://localhost:8088/secure/jobFile.do?jobId=19&key=job-macgo-bt-everbloom_gmail_com-0000000019/busselton_20m.csv>
+      <http://www.w3.org/2000/01/rdf-schema#type>
+              "http://www.w3.org/ns/prov#Entity" .
+
+<http://siss2.anu.edu.au/erddap/griddap/elevation.nc?elevation%5B(-33.530970094812595):1:(-33.07185712811731)%5D%5B(114.95404886315322):1:(115.66816019128255)%5D>
+      <http://www.w3.org/2000/01/rdf-schema#type>
+              "http://www.w3.org/ns/prov#Entity" .
+
+<http://localhost:8088/secure/jobFile.do?jobId=19&key=job-macgo-bt-everbloom_gmail_com-0000000019/vl-download.sh>
+      <http://www.w3.org/2000/01/rdf-schema#type>
+              "http://www.w3.org/ns/prov#Entity" .
+
+<http://localhost:8088/secure/jobFile.do?jobId=19&key=job-macgo-bt-everbloom_gmail_com-0000000019/busselton_extent_edit.csv>
+      <http://www.w3.org/2000/01/rdf-schema#type>
+              "http://www.w3.org/ns/prov#Entity" .
+
+<http://localhost:8088/secure/jobFile.do?jobId=19&key=job-macgo-bt-everbloom_gmail_com-0000000019/busselton_1km.csv>
+      <http://www.w3.org/2000/01/rdf-schema#type>
+              "http://www.w3.org/ns/prov#Entity" .
+
+<http://localhost:8088/secure/jobFile.do?jobId=19&key=job-macgo-bt-everbloom_gmail_com-0000000019/bunbury_1km_extend.csv>
+      <http://www.w3.org/2000/01/rdf-schema#type>
+              "http://www.w3.org/ns/prov#Entity" .
