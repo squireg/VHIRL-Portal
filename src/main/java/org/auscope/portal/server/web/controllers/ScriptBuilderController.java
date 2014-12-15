@@ -8,7 +8,9 @@ package org.auscope.portal.server.web.controllers;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -18,6 +20,8 @@ import org.auscope.portal.core.services.PortalServiceException;
 import org.auscope.portal.core.util.FileIOUtil;
 import org.auscope.portal.server.web.service.ScmEntryService;
 import org.auscope.portal.server.web.service.ScriptBuilderService;
+import org.auscope.portal.server.web.service.scm.Problem;
+import org.auscope.portal.server.web.service.scm.Solution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -156,5 +160,45 @@ public class ScriptBuilderController extends BasePortalController {
         String finalTemplate = sbService.populateTemplate(templateString,
                 kvpMapping);
         return generateJSONResponseMAV(true, finalTemplate, "");
+    }
+
+    /**
+     * Return a JSON list of problems and their solutions.
+     */
+    @RequestMapping("/getSolutions.do")
+    public ModelAndView getSolutions() {
+        // Get the Solutions from the SSC
+        List<Solution> solutions = scmEntryService.getSolutions();
+
+        // Group solutions by the problem that they solve.
+        HashMap<String, Problem> problems = new HashMap<String, Problem>();
+        for (Solution solution: solutions) {
+            String problemId = solution.getProblem().getId();
+            Problem problem = problems.get(problemId);
+            if (problem == null) {
+                problem = solution.getProblem();
+                problem.setSolutions(new ArrayList<Solution>());
+                problems.put(problem.getId(), problem);
+            }
+            problem.getSolutions().add(solution);
+        }
+
+        // Return the result
+        return generateJSONResponseMAV(true, problems.values(), "");
+    }
+
+    /**
+     * Return the details for a solution.
+     *
+     * @param solutionId String solution id
+     *
+     */
+    @RequestMapping("/getSolution.do")
+    public ModelAndView getSolution(String solutionId) {
+        Solution solution = scmEntryService.getScmSolution(solutionId);
+
+        // Wrap the data in an array or list until the JSON response
+        // code is fixed.
+        return generateJSONResponseMAV(true, new Solution[] {solution}, "");
     }
 }

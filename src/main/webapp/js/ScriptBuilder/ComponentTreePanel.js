@@ -34,15 +34,18 @@ Ext.define('ScriptBuilder.ComponentTreePanel', {
         // fire addcomponent to create and show the GUI.
         if (!Ext.isEmpty(componentName)) {
             Ext.Ajax.request({
-                url: componentName,
+                url: 'getSolution.do',
                 scope: this,
                 headers: {
                     Accept: 'application/json'
                 },
+                params: {
+                    solutionId: componentName
+                },
                 success: function(response) {
                     entry = Ext.JSON.decode(response.responseText);
-                    if (entry) {
-                        this.fireEvent('addcomponent', this, entry, name, description);                        
+                    if (entry && entry.data) {
+                        this.fireEvent('addcomponent', this, entry.data[0], name, description);
                     }
                 },
 

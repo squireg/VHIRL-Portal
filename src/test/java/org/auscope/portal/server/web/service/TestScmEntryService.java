@@ -3,6 +3,7 @@ package org.auscope.portal.server.web.service;
 import java.util.Properties;
 
 import org.apache.velocity.app.VelocityEngine;
+import org.auscope.portal.core.services.cloud.CloudComputeService;
 import org.auscope.portal.core.test.PortalTestClass;
 import org.auscope.portal.server.vegl.VEGLJobManager;
 import org.auscope.portal.server.vegl.VLScmSnapshotDao;
@@ -21,7 +22,8 @@ import org.springframework.ui.velocity.VelocityEngineFactoryBean;
 public class TestScmEntryService extends PortalTestClass {
     private ScmEntryService service;
     private VLScmSnapshotDao mockSnapshotDao = context.mock(VLScmSnapshotDao.class);
-    private VEGLJobManager mockJobManager = context.mock(VEGLJobManager.class);    
+    private VEGLJobManager mockJobManager = context.mock(VEGLJobManager.class);
+    private CloudComputeService[] computeServices = new CloudComputeService[] {context.mock(CloudComputeService.class)};
 
     @Before
     public void init() throws Exception {
@@ -35,7 +37,8 @@ public class TestScmEntryService extends PortalTestClass {
 
         service = new ScmEntryService(mockSnapshotDao,
                                       mockJobManager,
-                                      velocityEngine);
+                                      velocityEngine,
+                                      computeServices);
     }
 
     @Test

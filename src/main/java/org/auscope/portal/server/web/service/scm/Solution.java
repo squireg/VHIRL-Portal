@@ -1,56 +1,19 @@
 package org.auscope.portal.server.web.service.scm;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.springframework.web.client.RestTemplate;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Solution {
-    private String id;
-    private String name;
-    private String description;
-    private Date createdAt;
+public class Solution extends Entry {
     private String template;
+    private Problem problem;
     private Toolbox toolbox;
     private List<Map<String, String>> dependencies;
-    // Ignore variables - don't care about them server-side
+    private List<Map<String, Object>> variables;
 
-    @JsonProperty("@id")
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
-    @JsonProperty("created_at")
-    public Date getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
-
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return name;
-    }
-    /**
-     * @param name the name to set
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-    /**
-     * @return the description
-     */
-    public String getDescription() {
-        return description;
-    }
-    /**
-     * @param description the description to set
-     */
-    public void setDescription(String description) {
-        this.description = description;
-    }
     /**
      * @return the template
      */
@@ -68,7 +31,7 @@ public class Solution {
      * @return the toolbox
      */
     public Toolbox getToolbox() {
-        return toolbox;
+        return getToolbox(false);
     }
 
     /**
@@ -78,7 +41,9 @@ public class Solution {
      * @return the toolbox
      */
     public Toolbox getToolbox(boolean full) {
-        ensureToolbox();
+        if (full) {
+            ensureToolbox();
+        }
         return toolbox;
     }
 
@@ -95,12 +60,21 @@ public class Solution {
     public List<Map<String, String>> getDependencies() {
         return dependencies;
     }
+
+    public List<Map<String, Object>> getVariables() {
+        return variables;
+    }
+
+    public void setVariables(List<Map<String, Object>> variables) {
+        this.variables = variables;
+    }
+
     /**
      * @param dependencies the dependencies to set
      */
     public void setDependencies(List<Map<String, String>> dependencies) {
         this.dependencies = dependencies;
-    }    
+    }
 
     /**
      * Ensures full Toolbox details have been fetched.
@@ -109,9 +83,17 @@ public class Solution {
         // Only fetch the toolbox detail if we haven't already
         if (this.toolbox.getSource() == null) {
             RestTemplate rest = new RestTemplate();
-            Toolbox toolbox = rest.getForObject(this.toolbox.getId(),
+            Toolbox toolbox = rest.getForObject(this.toolbox.getUri(),
                                                 Toolbox.class);
             setToolbox(toolbox);
         }
+    }
+
+    public Problem getProblem() {
+        return problem;
+    }
+
+    public void setProblem(Problem problem) {
+        this.problem = problem;
     }
 }
