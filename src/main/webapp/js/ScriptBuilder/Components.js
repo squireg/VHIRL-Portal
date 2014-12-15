@@ -7,10 +7,9 @@ Ext.ns('ScriptBuilder.Components');
  * panel with the resulting tree.
  */
 ScriptBuilder.Components.getComponents = function(tree, fn) {
-    // http://jupiter-bt.nexus.csiro.au:5000/templates
-    // http://localhost:8000/templates
+    // 'http://vhirl-dev.csiro.au/scm/solutions',
     Ext.Ajax.request({
-        url : 'http://vhirl-dev.csiro.au/scm/solutions',
+        url : 'getSolutions.do',
         scope : this,
         headers: {
             Accept: 'application/json'
@@ -21,39 +20,35 @@ ScriptBuilder.Components.getComponents = function(tree, fn) {
             if (success) {
                 var responseObj = Ext.JSON.decode(response.responseText);
                 if (responseObj) {
-                    var problems = {};
-                    var solution, problem, data, prob_id;
+                    var data, prob_id, children;
 
-                    for (var idx in responseObj.solutions) {
-                        data = responseObj.solutions[idx];
-                        solution = {
-                            id: data['@id'],
-                            type: "s",
-                            text: data.name,
-                            qtip: data.description,
-                            leaf: true
-                        };
-                        prob_id = data.problem['@id'];
-                        problem = problems[prob_id];
-                        if (!problem) {
-                            problem = {
-                                text: data.problem.name,
-                                type: "category",
-                                qtip: data.problem.description,
-                                expanded: true,
-                                children: []
-                            };
-
-                            problems[prob_id] = problem;
-                        }
-                        problem.children.push(solution);
-                    }
-
-                    // Populate the tree in panel
+                    // Clear existing content in the tree
                     var root = tree.getRootNode();
                     root.removeAll(true);
-                    for (var t in problems) {
-                        root.appendChild(problems[t]);
+
+                    for (var i in responseObj.data) {
+                        var problem = responseObj.data[i];
+                        children = [];
+
+                        for (var j in problem.solutions) {
+                            var solution = problem.solutions[j];
+
+                            children.push({
+                                id: solution.uri,
+                                type: "s",
+                                text: solution.name,
+                                qtip: solution.description,
+                                leaf: true
+                            });
+                        }
+
+                        root.appendChild({
+                            text: problem.name,
+                            type: "category",
+                            qtip: problem.description,
+                            expanded: true,
+                            children: children
+                        });
                     }
 
                     // Call the callback function fn
