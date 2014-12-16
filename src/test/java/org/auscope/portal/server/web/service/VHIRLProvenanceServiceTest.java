@@ -35,22 +35,22 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
     List<VglDownload> downloads = new ArrayList<>();
     VEGLJob turtleJob;
 
-    final String initalTurtle = "<http://portal-fake.vhirl.org/secure/getJobObject.do?jobId=1>\n" +
-            "      a       <http://www.w3.org/ns/prov#Activity> ;\n";
+    final String initalTurtle = "<http://portal-fake.vhirl.org/secure/getJobObject.do?jobId=1>" + System.lineSeparator() +
+            "      a       <http://www.w3.org/ns/prov#Activity> ;" + System.lineSeparator();
 
     final String intermediateTurtle =
-            "      a       <http://www.w3.org/ns/prov#Entity> ;\n" +
-            "      <http://www.w3.org/ns/dcat#downloadURL>\n" +
-            "              \"http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=activity.ttl\"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;\n" +
-            "      <http://www.w3.org/ns/prov#wasAttributedTo>\n" +
+            "      a       <http://www.w3.org/ns/prov#Entity> ;" + System.lineSeparator() +
+            "      <http://www.w3.org/ns/dcat#downloadURL>" + System.lineSeparator() +
+            "              \"http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=activity.ttl\"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;" + System.lineSeparator() +
+            "      <http://www.w3.org/ns/prov#wasAttributedTo>" + System.lineSeparator() +
             "              \"mailto:foo@test.com\"^^<http://www.w3.org/2001/XMLSchema#string> .";
 
     final String endedTurtle = "<http://www.w3.org/ns/prov#endedAtTime>";
     final String file1Turtle =
-            "      a       <http://www.w3.org/ns/prov#Entity> ;\n" +
-            "      <http://www.w3.org/ns/dcat#downloadURL>\n" +
-            "              \"http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=cloudKey\"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;\n" +
-            "      <http://www.w3.org/ns/prov#wasAttributedTo>\n" +
+            "      a       <http://www.w3.org/ns/prov#Entity> ;" + System.lineSeparator() +
+            "      <http://www.w3.org/ns/dcat#downloadURL>" + System.lineSeparator() +
+            "              \"http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=cloudKey\"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;" + System.lineSeparator() +
+            "      <http://www.w3.org/ns/prov#wasAttributedTo>" + System.lineSeparator() +
             "              \"mailto:foo@test.com\"^^<http://www.w3.org/2001/XMLSchema#string> .";
 
     VHIRLProvenanceService vhirlProvenanceService;
