@@ -157,7 +157,7 @@ public class JobListController extends BaseCloudController  {
      * user session null will be returned.
      *
      * This function will log all appropriate errors.
-     * @param jobId
+     * @param seriesId
      * @return The VEGLSeries object on success or null otherwise.
      */
     private VEGLSeries attemptGetSeries(Integer seriesId, PortalUser user) {
@@ -360,7 +360,6 @@ public class JobListController extends BaseCloudController  {
     /**
      * Terminates the instance of an EMI that was launched by a job.
      *
-     * @param request The HttpServletRequest
      * @param job The job linked the to instance that is to be terminated
      */
     private void terminateInstance(VEGLJob job) {
@@ -475,6 +474,54 @@ public class JobListController extends BaseCloudController  {
             } else {
                 fileDetails = cloudStorageService.listJobFiles(job);
                 logger.info(fileDetails.length + " job files located");
+            }
+        } catch (Exception e) {
+            logger.warn("Error fetching output directory information.", e);
+            return generateJSONResponseMAV(false, null, "Error fetching output directory information");
+        }
+
+        return generateJSONResponseMAV(true, fileDetails, "");
+    }
+
+    /**
+     * Returns a JSON object containing a single file belonging to a
+     * given job.
+     *
+     * @param request The servlet request including a jobId parameter
+     * @param response The servlet response
+     *
+     * @return A JSON object with a files attribute which is a
+     *         FileInformation object. If the job was not found in the job
+     *         manager the JSON object will contain an error attribute
+     *         indicating the error.
+     */
+    @RequestMapping("/secure/jobFile.do")
+    public ModelAndView jobFile(HttpServletRequest request,
+                                 HttpServletResponse response,
+                                 @RequestParam("jobId") Integer jobId,
+                                 @RequestParam("key") String key,
+                                 @AuthenticationPrincipal PortalUser user) {
+        logger.info("Getting job files for job ID " + jobId);
+
+        VEGLJob job = attemptGetJob(jobId, user);
+        if (job == null) {
+            return generateJSONResponseMAV(false, null, "The requested job was not found.");
+        }
+
+        CloudFileInformation fileDetails = null;
+        try {
+            CloudStorageService cloudStorageService = getStorageService(job);
+            if (cloudStorageService == null) {
+                logger.error(String.format("No cloud storage service with id '%1$s' for job '%2$s'. Cloud files cannot be listed", job.getStorageServiceId(), job.getId()));
+                return generateJSONResponseMAV(false, null, "No cloud storage service found for job");
+            } else {
+                CloudFileInformation[] filesDetails = cloudStorageService.listJobFiles(job);
+                for (CloudFileInformation info : filesDetails) {
+                    if (info.getCloudKey().equals(key)) {
+                        fileDetails = info;
+                    }
+                }
+                logger.info(fileDetails + " job file located");
             }
         } catch (Exception e) {
             logger.warn("Error fetching output directory information.", e);
@@ -818,8 +865,8 @@ public class JobListController extends BaseCloudController  {
      * Tests whether the specified cloud file appears in a list of fileNames
      *
      * If fileNames is null, true will be returned
-     * @param files
-     * @param fileName
+     * @param cloudFile
+     * @param fileNames
      * @return
      */
     private boolean cloudFileIncluded(String[] fileNames, CloudFileInformation cloudFile) {
