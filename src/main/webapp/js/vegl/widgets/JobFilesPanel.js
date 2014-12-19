@@ -55,7 +55,7 @@ Ext.define('vegl.widgets.JobFilesPanel', {
         });
 
         
-        showPreview = function(fileName){
+        showPNGPreview = function(fileName){
         	var mywindow = Ext.create('Ext.window.Window', {
         	    html: '<img src="secure/showImage.do?filename='+jobFilesGrid.getSelectionModel().getSelection()[0].get('name')+'&jobId='+jobFilesGrid.currentJob.get('id')+'&key='+jobFilesGrid.getSelectionModel().getSelection()[0].get('name')+'" />',
         	    height: window.innerHeight*.8,
@@ -76,7 +76,135 @@ Ext.define('vegl.widgets.JobFilesPanel', {
 
         	return false;
         }
-        
+
+        show3DPreview = function(fileName){
+
+        	var mywindow = Ext.create('Ext.window.Window', {
+        	    height: window.innerHeight*.8,
+        	    width: window.innerWidth*.8,
+        	    layout: 'fit',
+        	    maxHeight: window.innerHeight*.8,
+        	    maxWidth: window.innerWidth*.8,
+                items: [{
+                    xtype : '3dscatterplot',
+                    itemId : 'plot',
+                    valueAttr : 'estimate',
+                    valueScale : 'log',
+                    pointSize: 4,
+                    allowSelection : true,
+                    flex: 1,
+                    listeners: {
+                        select: function(plot, data) {
+                            var parent = plot.ownerCt.down('#details');
+
+                            if (parent.items.getCount() !== 0) {
+                                parent.removeAll(true);
+                            }
+
+                            parent.add({
+                                xtype: 'datadisplayfield',
+                                fieldLabel: plot.xLabel,
+                                margin : '10 0 0 0',
+                                value: data.x
+                            });
+                            parent.add({
+                                xtype: 'datadisplayfield',
+                                fieldLabel: plot.yLabel,
+                                margin : '10 0 0 0',
+                                value: data.y
+                            });
+                            parent.add({
+                                xtype: 'datadisplayfield',
+                                fieldLabel: plot.zLabel,
+                                margin : '10 0 0 0',
+                                value: data.z
+                            });
+                            parent.add({
+                                xtype: 'datadisplayfield',
+                                fieldLabel: 'Estimate',
+                                margin : '10 0 0 0',
+                                value: data.estimate
+                            });
+                        },
+                        deselect: function(plot) {
+                            var parent = plot.ownerCt.down('#details');
+
+                            parent.removeAll(true);
+                            parent.add({
+                                xtype: 'label',
+                                margin: '50 0 0 0',
+                                style: {
+                                    color: '#888888',
+                                    'font-style': 'italic',
+                                    'font-size': '14.5px'
+                                },
+                                text: 'Click a point'
+                            });
+                            parent.add({
+                                xtype: 'label',
+                                margin: '2 0 0 0',
+                                style: {
+                                    color: '#888888',
+                                    'font-style': 'italic',
+                                    'font-size': '14.5px'
+                                },
+                                text: 'for more information'
+                            });
+                        }
+                    }
+                }]
+        	}).show()
+        	
+        	Ext.Ajax.request({
+        	url: 'secure/show3DJSON.do?filename='+jobFilesGrid.getSelectionModel().getSelection()[0].get('name')+'&jobId='+jobFilesGrid.currentJob.get('id')+'&key='+jobFilesGrid.getSelectionModel().getSelection()[0].get('name'),
+//            url : 'secure/show3DJSON.do',
+//            params : {
+//                jobId : jobFilesGrid.currentJob.get('id'),
+//                name : jobFilesGrid.getSelectionModel().getSelection()[0].get('name')
+//            },
+            scope : this,
+            callback : function(options, success, response) {            	
+                if (!success) {
+                    return;
+                }
+
+                var responseObj = Ext.JSON.decode(response.responseText);
+                
+                var scatterPlot = mywindow.down('#plot');
+                //alert("responseObj");
+                console.log(responseObj);
+                scatterPlot.xLabel = responseObj.data.xLabel;
+                scatterPlot.yLabel = responseObj.data.yLabel;
+                scatterPlot.zLabel = responseObj.data.zLabel;
+
+                scatterPlot.plot(responseObj.data.points);                
+            }
+        });
+
+
+        	
+        	
+
+//        	    html: '<img src="secure/show3DJSON.do?filename='+jobFilesGrid.getSelectionModel().getSelection()[0].get('name')+'&jobId='+jobFilesGrid.currentJob.get('id')+'&key='+jobFilesGrid.getSelectionModel().getSelection()[0].get('name')+'" />',
+//        	    height: window.innerHeight*.8,
+//        	    width: window.innerWidth*.8,
+//        	    layout: 'fit',
+//        	    maxHeight: window.innerHeight*.8,
+//        	    maxWidth: window.innerWidth*.8,
+//        	    autoScroll: true,
+//    	        listeners : {
+//    	            onload : {
+//    	                fn : function() {
+//    	                		this.setSize(null, null);
+//    	                }
+//    	            }
+//    	        }
+//
+//        	}).show();
+
+        	return false;
+        }
+
         Ext.apply(config, {
             plugins : [{
                 ptype : 'rowcontextmenu',
@@ -106,12 +234,37 @@ Ext.define('vegl.widgets.JobFilesPanel', {
             }),
             columns: [{ header: 'Filename', width: 200, sortable: true, dataIndex: 'name', renderer: function(fileName){
             	if (fileName.indexOf(".png")==fileName.length-4) {
-            		return fileName+" <a href='#' onClick='showPreview()'><img src='img/magglass.gif'></a>";
-            		
+            		return fileName+" <a href='#' onClick='showPNGPreview()'><img src='img/magglass.gif'></a>";
+            	} else if (fileName.indexOf(".json")==fileName.length-5) {
+            		return fileName+" <a href='#' onClick='show3DPreview()'><img src='img/magglass.gif'></a>";
             	}
             	return ""+fileName+"";
             	}},
-                      { header: 'Size', width: 100, sortable: true, dataIndex: 'size', renderer: Ext.util.Format.fileSize, align: 'right'}],
+                      { header: 'Size', width: 100, sortable: true, dataIndex: 'size', renderer: Ext.util.Format.fileSize, align: 'right'}
+//            	,{
+//                    xtype: 'clickcolumn',
+//                    dataIndex : 'name',
+//                    width: 48,
+//                    renderer: function() {
+//                        return Ext.DomHelper.markup({
+//                            tag : 'img',
+//                            width : 16,
+//                            height : 16,
+//                            style: {
+//                                cursor: 'pointer'
+//                            },
+//                            src: 'img/magglass.gif'
+//                        });
+//                    },
+//                    hasTip : true,
+//                    tipRenderer: function() {
+//                        return "Click to inspect this file.";
+//                    },
+//                    listeners : {
+//                        columnclick : Ext.bind(this._inspectClickHandler, this)
+//                    }
+//                }
+            	],
             tbar: [{
                 text: 'Actions',
                 iconCls: 'folder-icon',
@@ -123,6 +276,8 @@ Ext.define('vegl.widgets.JobFilesPanel', {
 
         this.on('selectionchange', this._onSelectionChange, this);
         this.on('celldblclick', this._onDblClick, this);
+
+        this.addEvents(['preview']);
 
     },
 
@@ -146,6 +301,10 @@ Ext.define('vegl.widgets.JobFilesPanel', {
             }
             this.downloadZipAction.setDisabled(false);
         }
+    },
+
+    _inspectClickHandler :  function(value, record, column, tip) {
+        this.fireEvent('preview', this, record.get('name'), this.job);
     },
 
     /**
