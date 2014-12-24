@@ -641,17 +641,20 @@ public class JobBuilderController extends BaseCloudController {
                 // we need to keep track of old job for audit trail purposes
                 oldJobStatus = curJob.getStatus();
 
-                // final check to ensure user has permission to run the job
-                boolean permissionGranted = false;
+                // Assume user has permission since we're using images from the SSC
+                boolean permissionGranted = true;
 
-                String jobImageId = curJob.getComputeVmId();
-                List<MachineImage> images = getImagesForJobAndUser(request, curJob);
-                for (MachineImage vglMachineImage : images) {
-                    if (vglMachineImage.getImageId().equals(jobImageId)) {
-                        permissionGranted = true;
-                        break;
-                    }
-                }
+                // // final check to ensure user has permission to run the job
+                // // boolean permissionGranted = false;
+
+                // String jobImageId = curJob.getComputeVmId();
+                // List<MachineImage> images = getImagesForJobAndUser(request, curJob);
+                // for (MachineImage vglMachineImage : images) {
+                //     if (vglMachineImage.getImageId().equals(jobImageId)) {
+                //         permissionGranted = true;
+                //         break;
+                //     }
+                // }
 
                 if (permissionGranted) {
                     // Right before we submit - pump out a script file for downloading every VglDownload object when the VM starts
@@ -883,28 +886,29 @@ public class JobBuilderController extends BaseCloudController {
         @RequestParam("computeServiceId") String computeServiceId,
         @RequestParam(value="jobId", required=false) Integer jobId) {
         try {
-            // Get images available to the current user
-            List<MachineImage> images = getImagesForJobAndUser(request, computeServiceId);
+            // Assume all images are usable by the current user
+            List<MachineImage> images = new ArrayList<MachineImage>();
 
             // Filter list to images suitable for job solution, if specified
             if (jobId != null) {
-                Set<String> vmIds =
-                    scmEntryService.getJobImages(jobId).get(computeServiceId);
-
-                if (vmIds == null) {
-                    // There are no suitable images at the specified compute service.
-                    log.warn("No suitable images at compute service (" + computeServiceId + ") for job (" + jobId + ")");
-                    images.clear();
-                }
-                else {
-                    ListIterator<MachineImage> it = images.listIterator();
-                    while (it.hasNext()) {
-                        MachineImage mi = it.next();
-                        if (!vmIds.contains(mi.getImageId())) {
-                            it.remove();
-                        }
+                Set<String> vmIds = scmEntryService
+                    .getJobImages(jobId)
+                    .get(computeServiceId);
+                if (vmIds != null) {
+                    for (String vmId: vmIds) {
+                        images.add(new MachineImage(vmId));
                     }
                 }
+            }
+            else {
+                // Fall back on old behaviour based on configured images for now
+                // Get images available to the current user
+                images = getImagesForJobAndUser(request, computeServiceId);
+            }
+
+            if (images.isEmpty()) {
+                // There are no suitable images at the specified compute service.
+                log.warn("No suitable images at compute service (" + computeServiceId + ") for job (" + jobId + ")");
             }
 
             // return result

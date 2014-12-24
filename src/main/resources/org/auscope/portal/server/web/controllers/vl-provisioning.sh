@@ -116,6 +116,11 @@ fi
 # Make sure we are provisioned
 # /////////////////////////////
 
+# cd back out of the deleted directory to avoid issues with puppet application
+cd; cd -
+
+# Apply puppet modules
+# TODO: template this so the portal can pass in provisioning from SSC
 puppet apply <<EOF
 include epel
 include puppi

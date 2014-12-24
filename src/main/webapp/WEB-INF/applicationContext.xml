@@ -243,6 +243,8 @@
         <constructor-arg name="accessKey" value="${env.nci.nova.accesskey}"/>
         <constructor-arg name="secretKey" value="${env.nci.nova.secretkey}"/>
         <property name="keypair" value="${env.nci.developer.keypair}"/>
+        <property name="sshUser" value="${env.nci.developer.ssh.user}"/>
+        <property name="sshKey" value="${env.nci.developer.ssh.key}"/>
         <property name="id" value="nci-openstack-compute"/>
         <property name="name" value="National Computing Infrastructure (Canberra)"/>
         <property name="groupName" value ="vl-#{inetAddress.hostName.toLowerCase()}"/>
@@ -274,6 +276,8 @@
         <constructor-arg name="accessKey" value="${env.nectar.nova.accesskey}"/>
         <constructor-arg name="secretKey" value="${env.nectar.nova.secretkey}"/>
         <property name="keypair" value="${env.nectar.developer.keypair}"/>
+        <property name="sshUser" value="${env.nectar.developer.ssh.user}"/>
+        <property name="sshKey" value="${env.nectar.developer.ssh.key}"/>
         <property name="id" value="necta:wr-openstack-compute"/>
         <property name="name" value="National eResearch Collaboration Tools and Resources"/>
         <property name="groupName" value ="vl-#{inetAddress.hostName.toLowerCase()}"/>

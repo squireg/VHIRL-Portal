@@ -26,9 +26,7 @@ import org.auscope.portal.core.server.security.oauth2.PortalUser;
 import org.auscope.portal.core.services.PortalServiceException;
 import org.auscope.portal.core.services.cloud.CloudComputeService;
 import org.auscope.portal.core.services.cloud.CloudStorageService;
-import org.auscope.portal.core.services.cloud.FileStagingService;
 import org.auscope.portal.core.test.ResourceUtil;
-import org.auscope.portal.core.util.structure.Job;
 import org.auscope.portal.server.vegl.VEGLJob;
 import org.auscope.portal.server.vegl.VEGLJobManager;
 import org.auscope.portal.server.vegl.VGLJobStatusAndLogReader;
@@ -37,9 +35,9 @@ import org.auscope.portal.server.vegl.VglDownload;
 import org.auscope.portal.server.vegl.VglMachineImage;
 import org.auscope.portal.server.vegl.VglParameter;
 import org.auscope.portal.server.vegl.mail.JobMailSender;
+import org.auscope.portal.server.web.service.ScmEntryService;
 import org.auscope.portal.server.web.service.VHIRLFileStagingService;
 import org.auscope.portal.server.web.service.VHIRLProvenanceService;
-import org.auscope.portal.server.web.service.ScmEntryService;
 import org.auscope.portal.server.web.service.monitor.VGLJobStatusChangeHandler;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -47,6 +45,7 @@ import org.jmock.Sequence;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -703,6 +702,7 @@ public class TestJobBuilderController {
      * the VMI.
      */
     @Test
+    @Ignore // Permission is not checked temporarily with SSC integration
     public void testJobSubmission_PermissionDenied() throws Exception {
         //Instantiate our job object
         final VEGLJob jobObj = new VEGLJob(new Integer(13));
