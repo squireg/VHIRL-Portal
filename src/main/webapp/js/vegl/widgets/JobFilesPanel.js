@@ -86,7 +86,7 @@ Ext.define('vegl.widgets.JobFilesPanel', {
         	    maxHeight: window.innerHeight*.8,
         	    maxWidth: window.innerWidth*.8,
                 items: [{
-                    xtype : '3dscatterplot',
+                    xtype : '3dterrainplot',
                     itemId : 'plot',
                     valueAttr : 'estimate',
                     valueScale : 'log',
@@ -177,7 +177,7 @@ Ext.define('vegl.widgets.JobFilesPanel', {
                 scatterPlot.yLabel = responseObj.data.yLabel;
                 scatterPlot.zLabel = responseObj.data.zLabel;
 
-                scatterPlot.plot(responseObj.data.points);                
+                scatterPlot.plot(responseObj.data);                
             }
         });
 
