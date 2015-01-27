@@ -57,17 +57,23 @@ Ext.define('vegl.widgets.JobFilesPanel', {
         
         showPNGPreview = function(fileName){
         	var mywindow = Ext.create('Ext.window.Window', {
-        	    html: '<img src="secure/showImage.do?filename='+jobFilesGrid.getSelectionModel().getSelection()[0].get('name')+'&jobId='+jobFilesGrid.currentJob.get('id')+'&key='+jobFilesGrid.getSelectionModel().getSelection()[0].get('name')+'" />',
-        	    height: window.innerHeight*.8,
-        	    width: window.innerWidth*.8,
+        	    title:jobFilesGrid.getSelectionModel().getSelection()[0].get('name'),
+        	    html: '<img id="preview" src="secure/showImage.do?filename='+jobFilesGrid.getSelectionModel().getSelection()[0].get('name')+'&jobId='+jobFilesGrid.currentJob.get('id')+'&key='+jobFilesGrid.getSelectionModel().getSelection()[0].get('name')+'" style="max-height:100%; max-width:100%;"/>',
+        	    height: window.innerHeight,//*.9,
+        	    width: window.innerWidth,//*.9,
         	    layout: 'fit',
-        	    maxHeight: window.innerHeight*.8,
-        	    maxWidth: window.innerWidth*.8,
+        	    minHeight: window.innerHeight,//*.9,
+        	    minWidth: window.innerWidth,//*.9,
         	    autoScroll: true,
+        	    draggable: false,
+        	    resizable: false,
     	        listeners : {
     	            onload : {
     	                fn : function() {
-    	                		this.setSize(null, null);
+    	                    previmg = document.getElementById("preview");
+    	                    console.log(previmg);
+    	                    console.log("previmg");
+    	                	this.setSize(previmg.height, previmg.height);
     	                }
     	            }
     	        }
@@ -80,11 +86,19 @@ Ext.define('vegl.widgets.JobFilesPanel', {
         show3DPreview = function(fileName){
 
         	var mywindow = Ext.create('Ext.window.Window', {
-        	    height: window.innerHeight*.8,
-        	    width: window.innerWidth*.8,
-        	    layout: 'fit',
-        	    maxHeight: window.innerHeight*.8,
-        	    maxWidth: window.innerWidth*.8,
+                title:jobFilesGrid.getSelectionModel().getSelection()[0].get('name'),
+        	    height: window.innerHeight,//*.9,
+        	    width: window.innerWidth,//*.9,
+        	    //layout: 'fit',
+        	    layout: {
+        	    	type: 'vbox',
+        	    	align: 'stretch',
+        	    	pack: 'start'
+        	    },
+        	    minHeight: window.innerHeight,//*.9,
+        	    minWidth: window.innerWidth,//*.9,
+            	draggable: false,
+        	    resizable: false,
                 items: [{
                     xtype : '3dterrainplot',
                     itemId : 'plot',
@@ -152,6 +166,41 @@ Ext.define('vegl.widgets.JobFilesPanel', {
                             });
                         }
                     }
+                },
+                { xtype: 'container',
+                    layout: {
+                    	align: 'stretch',
+                        type: 'hbox'
+                    },
+                    items:[
+                           {
+                        	   xtype: 'button',
+                        	   id: 'buttonStage0',
+                               text: 'Initial stage',
+                           },
+                           {
+                               xtype: 'button',
+                         	   id: 'buttonStage-1',
+                               text: 'Previous stage'
+                           },
+                           {
+                         	   xtype: 'label',
+                         	   id: 'stageLabel',
+                         	   text: 'Stage 0 of 200',
+                               margins: '10 10 10 10'
+                           },
+                           {	
+                        	   xtype: 'button',
+                        	   id: 'buttonStage+1',
+                        	   text: 'Next stage'
+                           },
+                           {
+                        	   xtype: 'button',
+                        	   id: 'buttonStageN',
+                        	   text: 'Last stage'
+                           }
+                     ]
+                    
                 }]
         	}).show()
         	

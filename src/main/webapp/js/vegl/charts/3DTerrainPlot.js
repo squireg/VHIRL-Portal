@@ -3,6 +3,7 @@
  *
  * 3D display is dependent on Three JS. Point scaling requires D3
  */
+
 Ext.define('vegl.charts.3DTerrainPlot', {
     extend: 'Ext.panel.Panel',
 
@@ -12,7 +13,6 @@ Ext.define('vegl.charts.3DTerrainPlot', {
     d3 : null, //D3 elements (graphs, lines etc).
     threeJs : null, //Three JS elements
     innerId: null, //Internal ID for rendering three js
-
 
     /**
      * Adds the following config
@@ -47,28 +47,28 @@ Ext.define('vegl.charts.3DTerrainPlot', {
      * }
      *
      */
-    constructor : function(config) {
+    constructor : function (config) {
         this.d3 = null;
         this.threeJs = null;
         this.innerId = Ext.id();
-        this.data = config.data ? config.data : null;
-        this.pointSize = config.pointSize ? config.pointSize : 10;
+        this.data = config.data || null;
+        this.pointSize = config.pointSize || 10;
         this.allowSelection = config.allowSelection ? true : false;
 
-        this.xAttr = config.xAttr ? config.xAttr : 'x';
-        this.xLabel = config.xLabel ? config.xLabel : 'X';
-        this.xDomain = config.xDomain ? config.xDomain : null;
-        this.yAttr = config.yAttr ? config.yAttr : 'y';
-        this.yLabel = config.yLabel ? config.yLabel : 'Y';
-        this.yDomain = config.yDomain ? config.yDomain : null;
-        this.zAttr = config.zAttr ? config.zAttr : 'z';
-        this.zLabel = config.zLabel ? config.zLabel : 'Z';
-        this.zDomain = config.zDomain ? config.zDomain : null;
-        this.valueAttr = config.valueAttr ? config.valueAttr : 'value';
-        this.valueLabel = config.valueLabel ? config.valueLabel : 'Value';
-        this.valueDomain = config.valueDomain ? config.valueDomain : null;
-        this.valueScale = config.valueScale ? config.valueScale : 'linear';
-        this.valueRenderer = config.valueRenderer ? config.valueRenderer : null;
+        this.xAttr = config.xAttr || 'x';
+        this.xLabel = config.xLabel || 'X';
+        this.xDomain = config.xDomain || null;
+        this.yAttr = config.yAttr || 'y';
+        this.yLabel = config.yLabel || 'Y';
+        this.yDomain = config.yDomain || null;
+        this.zAttr = config.zAttr || 'z';
+        this.zLabel = config.zLabel || 'Z';
+        this.zDomain = config.zDomain || null;
+        this.valueAttr = config.valueAttr || 'value';
+        this.valueLabel = config.valueLabel || 'Value';
+        this.valueDomain = config.valueDomain || null;
+        this.valueScale = config.valueScale || 'linear';
+        this.valueRenderer = config.valueRenderer || null;
 
         Ext.apply(config, {
             html : Ext.util.Format.format('<div id="{0}" style="width:100%;height:100%;"></div>', this.innerId)
@@ -83,9 +83,9 @@ Ext.define('vegl.charts.3DTerrainPlot', {
     },
 
     /**
-     * Initialise three JS elements.
+     * Initialise ThreeJS elements.
      */
-    _afterRender : function() {
+    _afterRender : function () {
         this.threeJs = {
             camera : null,
             controls : null,
@@ -102,19 +102,20 @@ Ext.define('vegl.charts.3DTerrainPlot', {
         this.threeJs.height = el.getHeight();
 
         if (this.allowSelection) {
-            el.on('mousedown', this._handleMouseDown, this);
-            el.on('mouseup', this._handleMouseUp, this);
+            //el.on('mousedown', this._handleMouseDown, this);
+            //el.on('mouseup', this._handleMouseUp, this);
 
             this.threeJs.raycaster = new THREE.Raycaster();
             this.threeJs.raycaster.params.PointCloud.threshold = this.pointSize / 3;
         }
 
         this.threeJs.camera = new THREE.PerspectiveCamera(60, this.threeJs.width / this.threeJs.height, 1, 10000);
-        this.threeJs.camera.position.z = 180;
-        this.threeJs.camera.position.y = 18;
+        this.threeJs.camera.position.x = 0;
+        this.threeJs.camera.position.z = 120;
+        this.threeJs.camera.position.y = 70;
         this.threeJs.scene.add(this.threeJs.camera);
 
-        this.threeJs.controls = new THREE.OrbitControls( this.threeJs.camera);
+        this.threeJs.controls = new THREE.OrbitControls(this.threeJs.camera);
         this.threeJs.controls.damping = 0.2;
         this.threeJs.controls.target = new THREE.Vector3(0, 0, 0);
         this.threeJs.controls.addEventListener('change', Ext.bind(this._renderThreeJs, this));
@@ -131,7 +132,7 @@ Ext.define('vegl.charts.3DTerrainPlot', {
 
         // Need a perpetual animation loop for updating the user controls
         var me = this;
-        var animate = function() {
+        var animate = function () {
             requestAnimationFrame(animate);
             me.threeJs.controls.update();
         };
@@ -147,14 +148,14 @@ Ext.define('vegl.charts.3DTerrainPlot', {
     /**
      * Renders the current state of the three JS camera/scene
      */
-    _renderThreeJs : function() {
+    _renderThreeJs : function () {
         this.threeJs.renderer.render(this.threeJs.scene, this.threeJs.camera);
     },
 
     /**
      * Update camera aspect ratio and renderer size
      */
-    _onResize : function(me, width, height) {
+    _onResize : function (me, width, height) {
         if (!this.threeJs) {
             return;
         }
@@ -177,7 +178,7 @@ Ext.define('vegl.charts.3DTerrainPlot', {
      * From:
      * http://stackoverflow.com/questions/55677/how-do-i-get-the-coordinates-of-a-mouse-click-on-a-canvas-element
      */
-    _relMouseCoords : function(event, target) {
+    _relMouseCoords : function (event, target) {
         var totalOffsetX = 0;
         var totalOffsetY = 0;
         var canvasX = 0;
@@ -187,7 +188,7 @@ Ext.define('vegl.charts.3DTerrainPlot', {
         do {
             totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
             totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
-        } while (currentElement = currentElement.offsetParent)
+        } while (currentElement = currentElement.offsetParent);
 
         canvasX = event.pageX - totalOffsetX;
         canvasY = event.pageY - totalOffsetY;
@@ -198,11 +199,13 @@ Ext.define('vegl.charts.3DTerrainPlot', {
         };
     },
 
-    _handleMouseDown : function(e, t) {
+    _handleMouseDown : function (e, t) {
+    	e.browserEvent.preventDefault();
         this._md = this._relMouseCoords(e.browserEvent, t);
     },
 
-    _handleMouseUp : function(e, t) {
+    _handleMouseUp : function (e, t) {
+    	e.browserEvent.preventDefault();
         var xy = this._relMouseCoords(e.browserEvent, t);
         var rawX = xy.x;
         var rawY = xy.y;
@@ -213,8 +216,8 @@ Ext.define('vegl.charts.3DTerrainPlot', {
         }
 
         // The X/Y needs to be scale independent
-        var x = ( rawX / this.threeJs.width ) * 2 - 1;
-        var y = - ( rawY / this.threeJs.height ) * 2 + 1;
+        var x = (rawX / this.threeJs.width) * 2 - 1;
+        var y = -(rawY / this.threeJs.height) * 2 + 1;
 
         // Otherwise cast a ray and see what we intersect
         var mouse3D = new THREE.Vector3(x, y, 0.5).unproject(this.threeJs.camera);
@@ -230,30 +233,32 @@ Ext.define('vegl.charts.3DTerrainPlot', {
         } else {
             this._clearPointSelect();
         }
+        //e.stopPropagation();
     },
 
-    _handlePointSelect : function(index, point) {
+    _handlePointSelect : function (index, point) {
         var dataItem = this.data[index];
         var color = this.threeJs.pointCloud.geometry.colors[index];
 
         if (!this.threeJs.selectionMesh) {
             var selectionBox = new THREE.SphereGeometry(this.pointSize * 0.8, 8, 8);
-            var selectionMaterial = new THREE.MeshBasicMaterial( { color: color, opacity: 1.0, transparent: false } );
-            this.threeJs.selectionMesh = new THREE.Mesh( selectionBox, selectionMaterial );
+            var selectionMaterial = new THREE.MeshBasicMaterial({ color: color, opacity: 1.0, transparent: false });
+            this.threeJs.selectionMesh = new THREE.Mesh(selectionBox, selectionMaterial);
         } else {
             this.threeJs.selectionMesh.material.color = color;
         }
 
         this.threeJs.selectionMesh.position.set(
-                this.d3.xScale(dataItem[this.xAttr]),
-                this.d3.yScale(dataItem[this.yAttr]),
-                this.d3.zScale(dataItem[this.zAttr]));
+                this.d3.weScale(dataItem[this.xAttr]),
+                this.d3.heightScale(dataItem[this.yAttr]),
+                this.d3.nsScale(dataItem[this.zAttr])
+        );
         this.threeJs.scene.add(this.threeJs.selectionMesh);
         this._renderThreeJs();
         this.fireEvent('select', this, dataItem);
     },
 
-    _clearPointSelect : function() {
+    _clearPointSelect : function () {
         if (this.threeJs.selectionMesh) {
             this.threeJs.scene.remove(this.threeJs.selectionMesh);
             this.threeJs.selectionMesh = null;
@@ -263,10 +268,24 @@ Ext.define('vegl.charts.3DTerrainPlot', {
         this.fireEvent('deselect', this);
     },
 
+    _faceIsClockwise : function (faceid) {
+    	// schoelace surveyor
+    	// face 0 = data.faces[faceid][0],data.faces[faceid][1],data.faces[faceid][2]
+    	// point 0 number = data.faces[faceid][0]
+    	// point 0 = data.points[data.faces[faceid][0]].x
+    	
+    	return ((this.data.points[this.data.faces[faceid][0]].x*this.data.points[this.data.faces[faceid][1]].y)
+    			+(this.data.points[this.data.faces[faceid][1]].x*this.data.points[this.data.faces[faceid][2]].y)
+    			+(this.data.points[this.data.faces[faceid][2]].x*this.data.points[this.data.faces[faceid][0]].y)
+    			-(this.data.points[this.data.faces[faceid][0]].y*this.data.points[this.data.faces[faceid][1]].x)
+    			-(this.data.points[this.data.faces[faceid][1]].y*this.data.points[this.data.faces[faceid][2]].x)
+    			-(this.data.points[this.data.faces[faceid][2]].y*this.data.points[this.data.faces[faceid][0]].x)) < 0
+    },
+    
     /**
      * Clear the entire contents of the scatter plot
      */
-    clearPlot : function() {
+    clearPlot : function () {
         if (!this.threeJs) {
             return;
         }
@@ -277,6 +296,9 @@ Ext.define('vegl.charts.3DTerrainPlot', {
         this.d3 = {};
         this.data = null;
     },
+
+    
+    
 
     /**
      * Update the scatter plot with the specified data
@@ -290,6 +312,16 @@ Ext.define('vegl.charts.3DTerrainPlot', {
 
         function v(x, y, z) {
             return new THREE.Vector3(x, y, z);
+        }
+        
+        function _viewStage(n) {
+        	if (n>=0 && n<numberOfStages) {
+	        	scene.remove(waterlevels[current_stage]);
+	            scene.add(waterlevels[n]);
+	            current_stage = n;
+	            Ext.getCmp('stageLabel').setText("Stage " + (n+1) + " of " + numberOfStages);
+	            me._renderThreeJs();
+        	}
         }
 
         function createTextCanvas(text, color, font, size) {
@@ -308,96 +340,22 @@ Ext.define('vegl.charts.3DTerrainPlot', {
             return canvas;
         }
 
+        
 		function generateHeight( width, height ) {
-
 			var size = width * height, data = new Uint8Array( size ),
 			perlin = new ImprovedNoise(), quality = 1, z = Math.random() * 100;
 
 			for ( var j = 0; j < 4; j ++ ) {
-
 				for ( var i = 0; i < size; i ++ ) {
-
 					var x = i % width, y = ~~ ( i / width );
 					data[ i ] += Math.abs( perlin.noise( x / quality, y / quality, z ) * quality * 1.75 );
-
 				}
-
 				quality *= 5;
-
 			}
-
 			return data;
-
 		}
 
         
-		function generateTexture( data, width, height ) {
-
-			var canvas, canvasScaled, context, image, imageData,
-			level, diff, vector3, sun, shade;
-
-			vector3 = new THREE.Vector3( 0, 0, 0 );
-
-			sun = new THREE.Vector3( 1, 1, 1 );
-			sun.normalize();
-
-			canvas = document.createElement( 'canvas' );
-			canvas.width = width;
-			canvas.height = height;
-
-			context = canvas.getContext( '2d' );
-			context.fillStyle = '#000';
-			context.fillRect( 0, 0, width, height );
-
-			image = context.getImageData( 0, 0, canvas.width, canvas.height );
-			imageData = image.data;
-			
-			console.log(data.length); //ax
-			
-			for ( var i = 0, j = 0, l = imageData.length; j<data.length; i += 4, j ++ ) {
-
-				vector3.x = data[j].x;
-				vector3.y = data[j].y;
-				vector3.z = data[j].e; //data[ j - width * 2 ] - data[ j + width * 2 ];
-				vector3.normalize();
-
-				shade = vector3.dot( sun );
-
-				imageData[ i ] = ( 96 + shade * 128 ) * ( 0.5 + data[ j ].x * 0.007 );
-				imageData[ i + 1 ] = ( 32 + shade * 96 ) * ( 0.5 + data[ j ].y * 0.007 );
-				imageData[ i + 2 ] = ( shade * 96 ) * ( 0.5 + data[ j ].z * 0.007 );
-			}
-
-			context.putImageData( image, 0, 0 );
-
-			// Scaled 4x
-
-			canvasScaled = document.createElement( 'canvas' );
-			canvasScaled.width = width * 4;
-			canvasScaled.height = height * 4;
-
-			context = canvasScaled.getContext( '2d' );
-			context.scale( 4, 4 );
-			context.drawImage( canvas, 0, 0 );
-
-			image = context.getImageData( 0, 0, canvasScaled.width, canvasScaled.height );
-			imageData = image.data;
-
-			for ( var i = 0, l = imageData.length; i < l; i += 4 ) {
-
-				var v = ~~ ( Math.random() * 5 );
-
-				imageData[ i ] += v;
-				imageData[ i + 1 ] += v;
-				imageData[ i + 2 ] += v;
-
-			}
-
-			context.putImageData( image, 0, 0 );
-
-			return canvasScaled;
-
-		}
 
         
         function createText2D(text, color, font, size, segW,
@@ -424,251 +382,287 @@ Ext.define('vegl.charts.3DTerrainPlot', {
             return mesh;
         }
 
-        
+        ///////////////////////////////////////////////////////////////////////////////////////////
+        //
         // start here
-        
+        //
+        ///////////////////////////////////////////////////////////////////////////////////////////
+
         this.clearPlot();
         this.data = data;
 
-        this.d3.xExtent = this.xDomain ? this.xDomain : d3.extent(data.points, function(d) {return d[me.xAttr];});
-        this.d3.yExtent = this.yDomain ? this.yDomain : d3.extent(data.points, function(d) {return d[me.yAttr];});
-        this.d3.zExtent = this.zDomain ? this.zDomain : d3.extent(data.points, function(d) {return d["e"];});
-        this.d3.valueExtent = this.valueDomain ? this.valueDomain : d3.extent(data.points, function(d) {return d["w"];});
+		// find outer boundaries of data
+        this.d3.xExtent = this.xDomain || d3.extent(data.points, function(d) {return d[me.xAttr];});
+        this.d3.yExtent = this.yDomain || d3.extent(data.points, function(d) {return d["e"];});
+        this.d3.zExtent = this.zDomain || d3.extent(data.points, function(d) {return d[me.yAttr];});
+        this.d3.valueExtent = this.valueDomain || d3.extent(data.points, function(d) {return d["w"][0];});
+		
+		this.d3.heightExtent=[Math.min(this.d3.yExtent[0],this.d3.valueExtent[0]),
+								Math.max(this.d3.yExtent[1],this.d3.valueExtent[1]),]
 
+		// calculate corners for cube
         var format = d3.format("+.3f");
         var vpts = {
             xMax : this.d3.xExtent[1],
             xCen : (this.d3.xExtent[1] + this.d3.xExtent[0]) / 2,
             xMin : this.d3.xExtent[0],
-            yMax : this.d3.yExtent[1],
-            yCen : (this.d3.yExtent[1] + this.d3.yExtent[0]) / 2,
-            yMin : this.d3.yExtent[0],
+            yMax : this.d3.heightExtent[1],
+            yCen : (this.d3.heightExtent[1] + this.d3.heightExtent[0]) / 2,
+            yMin : this.d3.heightExtent[0],
             zMax : this.d3.zExtent[1],
             zCen : (this.d3.zExtent[1] + this.d3.zExtent[0]) / 2,
             zMin : this.d3.zExtent[0]
         };
 
 
-		console.log("vpts");
-		console.log(vpts);
+		// calculate scaling	
+        var weScale, nsScale, heightScale;
 
-		console.log("x/y/z Extent");
-		console.log(this.d3.xExtent)
-		console.log(this.d3.yExtent)
-		console.log(this.d3.zExtent)
-        var xScale, yScale, zScale, valueScale;
+		var we=(this.d3.xExtent[1] - this.d3.xExtent[0]);
+		var ns=(this.d3.zExtent[1] - this.d3.zExtent[0]);
 
-        xScale = this.d3.xScale = d3.scale.linear()
-            .domain(this.d3.xExtent)
-            .range([ -50, 50 ]);
-        yScale = this.d3.yScale = d3.scale.linear()
-            .domain(this.d3.yExtent)
-            .range([ -50, 50 ]);
-        zScale = this.d3.zScale = d3.scale.linear()
-            .domain(this.d3.zExtent)
+		// Northern hemisphere might need correction
+		var nsflip = 1
+//		
+//		if (this._faceIsClockwise(0)) {
+//			nsflip = 1
+//			console.log("Clockwise!")
+//
+//		} else {
+//			console.log("notClockwise")
+//		}
+		
+		if (Math.min(ns,we)/Math.max(ns,we)<0.05) {
+	        nsScale = this.d3.nsScale = d3.scale.linear()
+	        	.domain(this.d3.zExtent)
+	        	.range([ 50, -50 ]);
+	        weScale = this.d3.weScale = d3.scale.linear()
+	        	.domain(this.d3.xExtent)
+	        	.range([ -50, 50 ]);				
+		} else {
+	        if (ns > we) {
+	        	nsScale = this.d3.nsScale = d3.scale.linear()
+	            	.domain(this.d3.zExtent)
+	            	.range([ nsflip*50, nsflip*-50 ]);
+	            var wex=((100/ns)*we)/2;
+	
+	            weScale = this.d3.weScale = d3.scale.linear()
+	            	.domain(this.d3.xExtent)
+	            	.range([ -1*wex, wex ]);	
+	        } else {
+	        	weScale = this.d3.weScale = d3.scale.linear()
+	            	.domain(this.d3.xExtent)
+	            	.range([ -50, 50 ]);
+	            var nsx=((100/we)*ns)/2;
+	            nsScale = this.d3.nsScale = d3.scale.linear()
+	            	.domain(this.d3.xExtent)
+	            	.range([ nsx, -1*nsx ]);	
+	        }
+		}
+        heightScale = this.d3.heightScale = d3.scale.linear()
+            .domain(this.d3.heightExtent)
             .range([ -10, 10 ]);
-
-        console.log("x/y/zscale");
-        console.log(xScale);
-        console.log(yScale);
-        console.log(zScale);
-        
         
         if (this.valueScale === 'linear') {
-            valueScale = this.d3.valueScale = d3.scale.linear()
+            valueScale = this.d3.valueScale = d3.scale.linear();
         } else if (this.valueScale === 'log') {
-            valueScale = this.d3.valueScale = d3.scale.log()
+            valueScale = this.d3.valueScale = d3.scale.log();
         } else {
             throw 'Invalid valueScale: ' + this.valueScale;
         }
         valueScale.domain(this.d3.valueExtent).range([ 0, 1]);
 
-        // Build our axes
+
+        // Build and draw the axes cube
         var lineGeo = new THREE.Geometry();
         lineGeo.vertices.push(
-            v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMin)),
-            v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMin)),
-            v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)),
+            v(weScale(vpts.xMin), heightScale(vpts.yMin), nsScale(vpts.zMin)), v(weScale(vpts.xMax), heightScale(vpts.yMin), nsScale(vpts.zMin)),
+            v(weScale(vpts.xMax), heightScale(vpts.yMax), nsScale(vpts.zMin)), v(weScale(vpts.xMin), heightScale(vpts.yMax), nsScale(vpts.zMin)),
+            v(weScale(vpts.xMin), heightScale(vpts.yMin), nsScale(vpts.zMin)),
 
-            v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zCen)),
-            v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zCen)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zCen)),
-            v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zCen)),
+            v(weScale(vpts.xMin), heightScale(vpts.yMin), nsScale(vpts.zCen)), v(weScale(vpts.xMax), heightScale(vpts.yMin), nsScale(vpts.zCen)),
+            v(weScale(vpts.xMax), heightScale(vpts.yMax), nsScale(vpts.zCen)), v(weScale(vpts.xMin), heightScale(vpts.yMax), nsScale(vpts.zCen)),
+            v(weScale(vpts.xMin), heightScale(vpts.yMin), nsScale(vpts.zCen)),
 
-            v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)),
-            v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMax)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMax)),
-            v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)),
+            v(weScale(vpts.xMin), heightScale(vpts.yMin), nsScale(vpts.zMax)), v(weScale(vpts.xMax), heightScale(vpts.yMin), nsScale(vpts.zMax)),
+            v(weScale(vpts.xMax), heightScale(vpts.yMax), nsScale(vpts.zMax)), v(weScale(vpts.xMin), heightScale(vpts.yMax), nsScale(vpts.zMax)),
+            v(weScale(vpts.xMin), heightScale(vpts.yMin), nsScale(vpts.zMax)),
 
-            v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMin)),
-            v(xScale(vpts.xMin), yScale(vpts.yMax), zScale(vpts.zMax)), v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)),
-            v(xScale(vpts.xMin), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMax)),
+            v(weScale(vpts.xMin), heightScale(vpts.yMin), nsScale(vpts.zMin)), v(weScale(vpts.xMin), heightScale(vpts.yMax), nsScale(vpts.zMin)),
+            v(weScale(vpts.xMin), heightScale(vpts.yMax), nsScale(vpts.zMax)), v(weScale(vpts.xMin), heightScale(vpts.yMin), nsScale(vpts.zMax)),
+            v(weScale(vpts.xMin), heightScale(vpts.yMin), nsScale(vpts.zMax)), v(weScale(vpts.xCen), heightScale(vpts.yMin), nsScale(vpts.zMax)),
 
-            v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMin)),
-            v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zMax)), v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMax)),
-            v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)),
+            v(weScale(vpts.xCen), heightScale(vpts.yMin), nsScale(vpts.zMin)), v(weScale(vpts.xCen), heightScale(vpts.yMax), nsScale(vpts.zMin)),
+            v(weScale(vpts.xCen), heightScale(vpts.yMax), nsScale(vpts.zMax)), v(weScale(vpts.xCen), heightScale(vpts.yMin), nsScale(vpts.zMax)),
+            v(weScale(vpts.xCen), heightScale(vpts.yMin), nsScale(vpts.zMax)), v(weScale(vpts.xMax), heightScale(vpts.yMin), nsScale(vpts.zMax)),
 
-            v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMin)),
-            v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)),
-            v(xScale(vpts.xMax), yScale(vpts.yMin), zScale(vpts.zMax)),
+            v(weScale(vpts.xMax), heightScale(vpts.yMin), nsScale(vpts.zMin)), v(weScale(vpts.xMax), heightScale(vpts.yMax), nsScale(vpts.zMin)),
+            v(weScale(vpts.xMax), heightScale(vpts.yMax), nsScale(vpts.zMax)), v(weScale(vpts.xMax), heightScale(vpts.yMin), nsScale(vpts.zMax)),
+            v(weScale(vpts.xMax), heightScale(vpts.yMin), nsScale(vpts.zMax)),
 
-            v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMax)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMin)),
-            v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMin)), v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zMax)),
-            v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zMax)),
+            v(weScale(vpts.xMax), heightScale(vpts.yCen), nsScale(vpts.zMax)), v(weScale(vpts.xMax), heightScale(vpts.yCen), nsScale(vpts.zMin)),
+            v(weScale(vpts.xMin), heightScale(vpts.yCen), nsScale(vpts.zMin)), v(weScale(vpts.xMin), heightScale(vpts.yCen), nsScale(vpts.zMax)),
+            v(weScale(vpts.xMax), heightScale(vpts.yCen), nsScale(vpts.zMax)),
 
-            v(xScale(vpts.xCen), yScale(vpts.yCen), zScale(vpts.zMax)), v(xScale(vpts.xCen), yScale(vpts.yCen), zScale(vpts.zMin)),
-            v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zMin)), v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zCen)),
-            v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yMax), zScale(vpts.zCen)),
-            v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zCen)), v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zCen))
+            v(weScale(vpts.xCen), heightScale(vpts.yCen), nsScale(vpts.zMax)), v(weScale(vpts.xCen), heightScale(vpts.yCen), nsScale(vpts.zMin)),
+            v(weScale(vpts.xCen), heightScale(vpts.yMin), nsScale(vpts.zMin)), v(weScale(vpts.xCen), heightScale(vpts.yMin), nsScale(vpts.zCen)),
+            v(weScale(vpts.xCen), heightScale(vpts.yMax), nsScale(vpts.zCen)), v(weScale(vpts.xMax), heightScale(vpts.yMax), nsScale(vpts.zCen)),
+            v(weScale(vpts.xMax), heightScale(vpts.yCen), nsScale(vpts.zCen)), v(weScale(vpts.xMin), heightScale(vpts.yCen), nsScale(vpts.zCen))
         );
         var lineMat = new THREE.LineBasicMaterial({
-            color : 0x000000,
+            color : 0xc0c0c0,
             lineWidth : 1
         });
         var line = new THREE.Line(lineGeo, lineMat);
         line.type = THREE.Lines;
         this.threeJs.scene.add(line);
 
+
+		// Write the labels
         //var titleX = createText2D('-' + this.xLabel);
         var titleX = createText2D('West');
-        titleX.position.x = xScale(vpts.xMin) - 12, titleX.position.y = 5;
+        titleX.position.x = weScale(vpts.xMin) - 12;
+//        titleX.position.y = 5;
         this.threeJs.scene.add(titleX);
 
-        var valueX = createText2D(format(this.d3.xExtent[0]));
-        valueX.position.x = xScale(vpts.xMin) - 12;
-        valueX.position.y = -5;
-        this.threeJs.scene.add(valueX);
+//        var valueX = createText2D(format(this.d3.xExtent[0]));
+//        valueX.position.x = weScale(vpts.xMin) - 12;
+//        valueX.position.y = -5;
+//        this.threeJs.scene.add(valueX);
 
         //var titleX = createText2D(this.xLabel);
         var titleX = createText2D('East');
-        titleX.position.x = xScale(vpts.xMax) + 12;
-        titleX.position.y = 5;
+        titleX.position.x = weScale(vpts.xMax) + 12;
+//        titleX.position.y = 5;
         this.threeJs.scene.add(titleX);
 
-        var valueX = createText2D(format(this.d3.xExtent[1]));
-        valueX.position.x = xScale(vpts.xMax) + 12;
-        valueX.position.y = -5;
-        this.threeJs.scene.add(valueX);
+//        var valueX = createText2D(format(this.d3.xExtent[1]));
+//        valueX.position.x = weScale(vpts.xMax) + 12;
+//        valueX.position.y = -5;
+//        this.threeJs.scene.add(valueX);
 
         //var titleY = createText2D('-' + this.yLabel);
-        var titleY = createText2D('South');
-        titleY.position.y = yScale(vpts.yMin) - 5;
+        var titleY = createText2D('Elevation');
+        titleY.position.y = heightScale(vpts.yMin) - 5;
         this.threeJs.scene.add(titleY);
 
         var valueY = createText2D(format(this.d3.yExtent[0]));
-        valueY.position.y = yScale(vpts.yMin) - 15;
+        valueY.position.y = heightScale(vpts.yMin) - 15;
         this.threeJs.scene.add(valueY);
 
         //var titleY = createText2D(this.yLabel);
-        var titleY = createText2D("North");
-        titleY.position.y = yScale(vpts.yMax) + 15;
+        var titleY = createText2D("Elevation");
+        titleY.position.y = heightScale(vpts.yMax) + 15;
         this.threeJs.scene.add(titleY);
 
         var valueY = createText2D(format(this.d3.yExtent[1]));
-        valueY.position.y = yScale(vpts.yMax) + 5;
+        valueY.position.y = heightScale(vpts.yMax) + 5;
         this.threeJs.scene.add(valueY);
 
-        var titleZ = createText2D('-' + this.zLabel + ' ' + format(this.d3.zExtent[0]));
-        titleZ.position.z = zScale(vpts.zMin) + 2;
+        //var titleZ = createText2D('-' + this.zLabel + ' ' + format(this.d3.zExtent[0]));
+        var titleZ = createText2D('South');//+ ' ' + format(this.d3.zExtent[0]));
+        titleZ.position.z = nsScale(vpts.zMin) + 2;
         this.threeJs.scene.add(titleZ);
 
-        var titleZ = createText2D(this.zLabel + ' ' + format(this.d3.zExtent[1]));
-        titleZ.position.z = zScale(vpts.zMax) + 2;
+        //var titleZ = createText2D(this.zLabel + ' ' + format(this.d3.zExtent[1]));
+        var titleZ = createText2D('North');//+ ' ' + format(this.d3.zExtent[1]));
+        titleZ.position.z = nsScale(vpts.zMax) - 2;
         this.threeJs.scene.add(titleZ);
 
 
         
         ///////////////////////////////////// start
         
+        //Process the data
 		var worldWidth = this.d3.xExtent[1]-this.d3.xExtent[0]; //256
 		var worldDepth = this.d3.yExtent[1]-this.d3.yExtent[0]; //256
-		var worldHalfWidth = worldWidth / 2
+		var worldHalfWidth = worldWidth / 2;
 		var worldHalfDepth = worldDepth / 2;
-		console.log(worldWidth);
-		console.log(worldDepth);
 		
-		container = document.getElementById( 'container' );
+		var container = document.getElementById( 'container' );
 
-		camera = this.threeJs.camera;
+		var camera = this.threeJs.camera;
 
-		scene = this.threeJs.scene;
+		var scene = this.threeJs.scene;
 		
-		controls = new THREE.OrbitControls(camera);
+		var controls = new THREE.OrbitControls(camera);
 		controls.center.set( 0.0, 0.0, 50.0 );
 		controls.userPanSpeed = 100;
 
-		//data = generateHeight( worldWidth, worldDepth );
 
-		//controls.center.y = data[ worldHalfWidth + worldHalfDepth * worldWidth ] + 500;
-		//camera.position.y =  controls.center.y + 2000;
-		//camera.position.x = 2000;
-
-		//var geometry = new THREE.PlaneBufferGeometry( worldWidth , worldDepth  );
-		//geometry.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
-
-		//var vertices = geometry.attributes.position.array;
-
-		console.log("data");
-		console.log(data);
-
+		Ext.get('buttonStage0').on('click', function(){
+			_viewStage(0);
+		});
+		Ext.get('buttonStage-1').on('click', function(){
+			_viewStage(current_stage-1);
+		});
+		Ext.get('buttonStage+1').on('click', function(){
+			_viewStage(current_stage+1);
+		});
+		Ext.get('buttonStageN').on('click', function(){
+			_viewStage(numberOfStages-1);
+		});
 
 
 		//Build the land
 		// A square using vertex coordinates and face indexes
 		var geometryLand = new THREE.Geometry();
 		for ( var i = 0; i < data.points.length; i++) {
-			geometryLand.vertices.push(new THREE.Vector3(yScale(data.points[i].x),yScale(data.points[i].y),zScale(data.points[i].e)));
+			geometryLand.vertices.push(new THREE.Vector3(weScale(data.points[i].x),heightScale(data.points[i].e),nsScale(data.points[i].y)));
 		}
 		for ( var i = 0; i < data.faces.length; i++) {
 			geometryLand.faces.push(new THREE.Face3(data.faces[i][0],data.faces[i][1],data.faces[i][2]));
 		}
-		console.log(geometryLand);
 		geometryLand.computeFaceNormals();
 		geometryLand.computeVertexNormals();
 		//var material = new THREE.MeshBasicMaterial({color: 0xffff00}); 
 		//var material = new THREE.MeshLambertMaterial({color: 0xd2a95f}); 
-		var materialLand = new THREE.MeshPhongMaterial({color: 0xd2a95f, shininess: 0}); 
+		var materialLand = new THREE.MeshPhongMaterial({color: 0xd2a95f, shininess: 0});
 		var objectLand = new THREE.Mesh(geometryLand, materialLand); 
 
 		scene.add(objectLand);
 
 
+		numberOfStages = data.points[0].w.length;
+		
 		// Build the water
-		var geometryWater = new THREE.Geometry();
-		for ( var i = 0; i < data.points.length; i++) {
-			geometryWater.vertices.push(new THREE.Vector3(yScale(data.points[i].x),yScale(data.points[i].y),zScale(data.points[i].w)));
+		var waterlevels = [];
+
+		for ( var stage = 0; stage < numberOfStages; stage++) {
+			var geometryWater = new THREE.Geometry();
+			for ( var i = 0; i < data.points.length; i++) {
+				geometryWater.vertices.push(new THREE.Vector3(weScale(data.points[i].x),heightScale(data.points[i].w[stage]),nsScale(data.points[i].y)));
+			}
+			for ( var i = 0; i < data.faces.length; i++) {
+				geometryWater.faces.push(new THREE.Face3(data.faces[i][0],data.faces[i][1],data.faces[i][2]));
+			}
+			geometryWater.computeFaceNormals();
+			geometryWater.computeVertexNormals();
+			//var material = new THREE.MeshBasicMaterial({color: 0xffff00}); 
+			//var material = new THREE.MeshLambertMaterial({color: 0xd2a95f}); 
+			var materialWater = new THREE.MeshPhongMaterial({color: 0x5555ff, shininess: 30, transparent: true, opacity: 0.8});
+			var objectWater = new THREE.Mesh(geometryWater, materialWater); 
+			waterlevels.push(objectWater);
 		}
-		for ( var i = 0; i < data.faces.length; i++) {
-			geometryWater.faces.push(new THREE.Face3(data.faces[i][0],data.faces[i][1],data.faces[i][2]));
-		}
-		console.log(geometryWater);
-		geometryWater.computeFaceNormals();
-		geometryWater.computeVertexNormals();
-		//var material = new THREE.MeshBasicMaterial({color: 0xffff00}); 
-		//var material = new THREE.MeshLambertMaterial({color: 0xd2a95f}); 
-		var materialWater = new THREE.MeshPhongMaterial({color: 0x5555ff, shininess: 30, transparent: true, opacity: 0.8 }); 
-		var objectWater = new THREE.Mesh(geometryWater, materialWater); 
 
-		scene.add(objectWater);
-
-
+		current_stage = 0;
+       
+		
 		var light  = new THREE.DirectionalLight( 0xffffff );
 		light.castShadow = true;
-		light.position.set(-2, 2, 5);  // set it light source to top-behind the cubes
-		light.target = objectLand           // target the light to the large cube
+		light.position.set(0, 200, -200);  // set it light source to top-behind the cubes
+		light.target = objectLand;           // target the light to the large cube
 		light.shadowCameraNear = 5;
 		light.shadowCameraFar = 25;
 		light.shadowCameraVisible = true;
 		light.shadowDarkness = 0.3;
 		
 		scene.add( light );
-		
 		var light = new THREE.AmbientLight( 0x404040 );
 		scene.add( light );
-		
-		
-		console.log(data);
-		
-        ///////////////////////////////////// end
-        
-        this._renderThreeJs();
+				
+
+        _viewStage(current_stage);
+
     }
 });
