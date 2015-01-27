@@ -35,22 +35,22 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
     List<VglDownload> downloads = new ArrayList<>();
     VEGLJob turtleJob;
 
-    final String initalTurtle = "<http://portal-fake.vhirl.org/secure/getJobObject.do?jobId=1>\n" +
-            "      a       <http://www.w3.org/ns/prov#Activity> ;\n";
+    final String initalTurtle = "<http://portal-fake.vhirl.org/secure/getJobObject.do?jobId=1>" + System.lineSeparator() +
+            "      a       <http://www.w3.org/ns/prov#Activity> ;" + System.lineSeparator();
 
     final String intermediateTurtle =
-            "      a       <http://www.w3.org/ns/prov#Entity> ;\n" +
-            "      <http://www.w3.org/ns/dcat#downloadURL>\n" +
-            "              \"http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=activity.ttl\"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;\n" +
-            "      <http://www.w3.org/ns/prov#wasAttributedTo>\n" +
+            "      a       <http://www.w3.org/ns/prov#Entity> ;" + System.lineSeparator() +
+            "      <http://www.w3.org/ns/dcat#downloadURL>" + System.lineSeparator() +
+            "              \"http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=activity.ttl\"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;" + System.lineSeparator() +
+            "      <http://www.w3.org/ns/prov#wasAttributedTo>" + System.lineSeparator() +
             "              \"mailto:foo@test.com\"^^<http://www.w3.org/2001/XMLSchema#string> .";
 
     final String endedTurtle = "<http://www.w3.org/ns/prov#endedAtTime>";
     final String file1Turtle =
-            "      a       <http://www.w3.org/ns/prov#Entity> ;\n" +
-            "      <http://www.w3.org/ns/dcat#downloadURL>\n" +
-            "              \"http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=cloudKey\"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;\n" +
-            "      <http://www.w3.org/ns/prov#wasAttributedTo>\n" +
+            "      a       <http://www.w3.org/ns/prov#Entity> ;" + System.lineSeparator() +
+            "      <http://www.w3.org/ns/dcat#downloadURL>" + System.lineSeparator() +
+            "              \"http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=cloudKey\"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;" + System.lineSeparator() +
+            "      <http://www.w3.org/ns/prov#wasAttributedTo>" + System.lineSeparator() +
             "              \"mailto:foo@test.com\"^^<http://www.w3.org/2001/XMLSchema#string> .";
 
     VHIRLProvenanceService vhirlProvenanceService;
@@ -108,7 +108,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
             will(returnValue(new FileInputStream(activityFile2)));
 
             allowing(turtleJob).getId();
-            will(returnValue(19));
+            will(returnValue(1));
         }});
     }
 
@@ -143,38 +143,41 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
 
     @Test
     public void testCreateEntitiesForInputs() throws Exception {
-        vhirlProvenanceService.createEntitiesForInputs(preparedJob);
+        Set<Entity> entities = vhirlProvenanceService.createEntitiesForInputs(preparedJob);
+        Assert.assertNotNull(entities);
+        Assert.assertEquals(3, entities.size());
     }
 
     @Test
     public void testCreateEntitiesForOutputs() throws Exception {
         String graph = vhirlProvenanceService.createEntitiesForOutputs(preparedJob);
-        System.out.println(graph);
         Assert.assertTrue(graph.contains(initalTurtle));
         Assert.assertTrue(graph.contains(endedTurtle));
-//        Assert.assertTrue(graph.contains(file1Turtle));
     }
 
     @Test
-    public void testSetFromModelBigger() throws Exception {
+    public void testSetFromModel() throws Exception {
         Set<Entity> outputs = new HashSet<>();
         InputStream activityStream = getClass().getResourceAsStream("/activity.ttl");
-        String serverURL = "http://localhost:8088";
-        Activity activity = null;
+        Activity activity;
         Model model = ModelFactory.createDefaultModel();
-        System.out.println("Current server URL: " + serverURL);
         model = model.read(activityStream,
-                vhirlProvenanceService.serverURL(),
+                serverURL,
                 "TURTLE");
         activity = new Activity().setActivityUri(new URI(
                 vhirlProvenanceService.jobURL(turtleJob, serverURL))).setFromModel(model);
         if (activity != null) {
             activity.setEndedAtTime(new Date());
-            outputs.add(new Entity().setEntityUri(new URI("http://localhost:8088/secure/jobFile.do?jobId=21&key=job-macgo-bt-everbloom_gmail_com-0000000021/1000_yrRP_hazard_map.png")));
+            String outputURL = serverURL + "/secure/jobFile.do?jobId=21&key=job-macgo-bt-everbloom_gmail_com-0000000021/1000_yrRP_hazard_map.png";
+            outputs.add(new Entity().setDataUri(new URI(outputURL)).setWasAttributedTo(new URI("mailto:jo@blogs.com")));
             activity.setGeneratedEntities(outputs);
             StringWriter out = new StringWriter();
             activity.getGraph().write(out, "TURTLE", serverURL);
-            System.out.println(out.toString());
+            String turtle = out.toString();
+            Assert.assertTrue(turtle.contains(initalTurtle));
+            Assert.assertTrue(turtle.contains(endedTurtle));
+            Assert.assertTrue(turtle.contains(file1Turtle));
+            Assert.assertTrue(turtle.contains(outputURL));
         }
     }
 }
