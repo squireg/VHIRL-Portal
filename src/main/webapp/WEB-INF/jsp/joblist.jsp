@@ -74,6 +74,12 @@
 
     <script type="text/javascript" src="js/vegl/JobList.js"></script>
     <script type="text/javascript" src="js/vegl/HelpHandler.js"></script>
+    <script type="text/javascript" src="js/vegl/charts/3DTerrainPlot.js"></script>
+    
+    <script src="portal-core/js/d3/d3.min.js" type="text/javascript" ></script>
+    <script src="portal-core/js/threejs/three.min.js" type="text/javascript"></script>
+    <script src="portal-core/js/threejs/controls/OrbitControls.js" type="text/javascript"></script>
+    
 </head>
 
 <body>

@@ -291,7 +291,8 @@
                     </property>
                 </bean>
                 <bean class="org.auscope.portal.server.vegl.VglMachineImage">
-                    <constructor-arg name="imageId" value="Melbourne/7fa567fb-24bb-412b-8c15-5002370ca199"/>
+                    <!-- <constructor-arg name="imageId" value="Melbourne/7fa567fb-24bb-412b-8c15-5002370ca199"/> -->
+                    <constructor-arg name="imageId" value="Melbourne/4f2315cf-e80b-470f-8df6-4f5347f95349"/>
                     <property name="name" value="ANUGA"/>
                     <property name="description"><value>A Centos 6 machine with ANUGA already installed.</value></property>
                     <property name="keywords">
