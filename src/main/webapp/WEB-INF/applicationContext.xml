@@ -59,7 +59,7 @@
         <property name="emailSender"><value><![CDATA[VHIRL Admin <noreply-cg-admin@csiro.au>]]></value></property>
         <property name="emailSubject" value="VHIRL Job (%s/%s)" />
     </bean>
-    
+
 
     <bean name="jobStatusLogReader" class="org.auscope.portal.server.vegl.VGLJobStatusAndLogReader" autowire="constructor"/>
     <bean name="vhirlProvenanceService" class="org.auscope.portal.server.web.service.VHIRLProvenanceService" autowire="constructor">
@@ -86,9 +86,9 @@
             </map>
         </property>
     </bean>
-    
+
     <bean name="vglPollingJobQueueManagerDetail" class="org.springframework.scheduling.quartz.JobDetailBean">
-        <property name="jobClass" value="org.auscope.portal.server.vegl.VGLPollingJobQueueManager" />       
+        <property name="jobClass" value="org.auscope.portal.server.vegl.VGLPollingJobQueueManager" />
     </bean>
 
     <!-- Simple Trigger for vglJobStatusMonitor task, run every 5 minutes -->
@@ -97,7 +97,7 @@
         <property name="repeatInterval" value="300000" />
         <property name="startDelay" value="10000" />
     </bean>
-    
+
     <!-- Simple Trigger for vglPollingJobQueueManagerDetail task, run every 30 minutes -->
     <bean id="quotaExceededTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
         <property name="jobDetail" ref="vglPollingJobQueueManagerDetail" />
@@ -243,8 +243,6 @@
         <constructor-arg name="accessKey" value="${env.nci.nova.accesskey}"/>
         <constructor-arg name="secretKey" value="${env.nci.nova.secretkey}"/>
         <property name="keypair" value="${env.nci.developer.keypair}"/>
-        <property name="sshUser" value="${env.nci.developer.ssh.user}"/>
-        <property name="sshKey" value="${env.nci.developer.ssh.key}"/>
         <property name="id" value="nci-openstack-compute"/>
         <property name="name" value="National Computing Infrastructure (Canberra)"/>
         <property name="groupName" value ="vl-#{inetAddress.hostName.toLowerCase()}"/>
@@ -276,8 +274,6 @@
         <constructor-arg name="accessKey" value="${env.nectar.nova.accesskey}"/>
         <constructor-arg name="secretKey" value="${env.nectar.nova.secretkey}"/>
         <property name="keypair" value="${env.nectar.developer.keypair}"/>
-        <property name="sshUser" value="${env.nectar.developer.ssh.user}"/>
-        <property name="sshKey" value="${env.nectar.developer.ssh.key}"/>
         <property name="id" value="necta:wr-openstack-compute"/>
         <property name="name" value="National eResearch Collaboration Tools and Resources"/>
         <property name="groupName" value ="vl-#{inetAddress.hostName.toLowerCase()}"/>
