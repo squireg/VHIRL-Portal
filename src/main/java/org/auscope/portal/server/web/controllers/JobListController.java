@@ -561,7 +561,7 @@ public class JobListController extends BaseCloudController  {
             return null;
         }
 
-        logger.debug("Download " + key);
+        logger.debug("Preview png " + key);
 
         //Get our Input Stream
         InputStream is = null;
@@ -606,7 +606,77 @@ public class JobListController extends BaseCloudController  {
     }
 
     
-    
+    /**
+     * Sends the contents of a job file to the client.
+     *
+     * @param request The servlet request including a jobId parameter and a
+     *                filename parameter
+     * @param response The servlet response receiving the data
+     *
+     * @return null on success or the joblist view with an error parameter on
+     *         failure.
+     */
+    //@RequestMapping("/secure/image/{imagename}.png")
+    @RequestMapping("/secure/show3DJSON.do")
+    //@RequestMapping("/secure/downloadFile.do")
+    public byte[] serve3DJSON(HttpServletRequest request,
+            HttpServletResponse response,
+        @RequestParam("jobId") Integer jobId,
+        @RequestParam("filename") String fileName,
+        @RequestParam("key") String key,
+        @AuthenticationPrincipal PortalUser user) {
+    	
+    	
+    	
+        VEGLJob job = attemptGetJob(jobId, user);
+        if (job == null) {
+            return null;
+        }
+
+        logger.debug("Preview 3D " + key);
+
+        //Get our Input Stream
+        InputStream is = null;
+        try {
+            CloudStorageService cloudStorageService = getStorageService(job);
+            if (cloudStorageService == null) {
+                logger.error(String.format("No cloud storage service with id '%1$s' for job '%2$s'. Cloud file cannot be downloaded", job.getStorageServiceId(), job.getId()));
+                return null;
+            }
+            is = cloudStorageService.getJobFile(job, key);
+        } catch (Exception ex) {
+            logger.warn(String.format("Unable to access '%1$s' from the cloud", key), ex);
+            return null;
+        }
+
+        //start writing our output stream
+        try {
+            response.setContentType("application/json");
+
+            //Ensure that our streams get closed
+            OutputStream out = response.getOutputStream();
+            try {
+
+                int n;
+                byte[] buffer = new byte[1024];
+
+                while ((n = is.read(buffer)) != -1) {
+                    out.write(buffer, 0, n);
+                }
+
+                out.flush();
+            } finally {
+                IOUtils.closeQuietly(is);
+                IOUtils.closeQuietly(out);
+            }
+        } catch (Exception ex) {
+            logger.warn("Error whilst writing to output stream", ex);
+        }
+
+        //The output is raw data down the output stream, just return null
+        return null;
+    }
+  
     
     
     
