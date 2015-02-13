@@ -27,14 +27,6 @@ Ext.define('vegl.widgets.JobInputFileWindow', {
                     xtype : 'form',
                     itemId : 'tab-local',
                     title : 'From Local File',
-//                    items : [{
-//                        xtype: 'filefield',
-//                        name: 'file',
-//                        anchor : '100%',
-//                        labelWidth: 150,
-//                        allowBlank: false,
-//                        fieldLabel: 'Select File to upload'
-//                    }]
                       items: [{
                         xtype: 'multifilefield',
                         name: 'file',
@@ -43,6 +35,40 @@ Ext.define('vegl.widgets.JobInputFileWindow', {
                         anchor: '100%',
                         allowBlank: false,
                         margin: 0
+                      },{
+                        xtype : 'textfield',
+                        fieldLabel: 'Name',
+                        anchor : '100%',
+                        name : 'name',
+                        allowBlank : true
+                      },{
+                        xtype : 'textfield',
+                        fieldLabel: 'Owner Email',
+                        anchor : '100%',
+                        name : 'owner',
+                        allowBlank : true,
+                        vtype : 'email'
+                      },{
+                        xtype : 'datefield',
+                        fieldLabel: 'Date Created',
+                        anchor : '100%',
+                        name : 'date',
+                        format: 'd/m/Y',
+                        value: new Date(),
+                        allowBlank : true
+                      },{
+                        xtype : 'textfield',
+                        fieldLabel: 'Description',
+                        anchor : '100%',
+                        name : 'description',
+                        allowBlank : true
+                      },{
+	                    xtype : 'textfield',
+                        fieldLabel: 'Link to Copyright',
+                        anchor : '100%',
+                        name : 'copyright',
+                        allowBlank : true,
+                        vtype : 'url'
                       }]
                 },{
                     xtype : 'form',
@@ -106,10 +132,15 @@ Ext.define('vegl.widgets.JobInputFileWindow', {
             return;
         }
 
+        var params = form.getValues();
+        params.jobId = this.jobId;
+        params.append = true;
+
         //Submit our form so our files get uploaded...
         form.submit({
             url: 'uploadFile.do',
             scope : this,
+            params: params,
             success: function(form, action) {
                 if (!action.result.success) {
                     Ext.Msg.alert('Error uploading file. ' + action.result.error);
@@ -119,9 +150,6 @@ Ext.define('vegl.widgets.JobInputFileWindow', {
             },
             failure: function() {
                 Ext.Msg.alert('Failure', 'File upload failed. Please try again in a few minutes.');
-            },
-            params: {
-                jobId : this.jobId
             },
             waitMsg: 'Uploading file, please wait...',
             waitTitle: 'Upload file'

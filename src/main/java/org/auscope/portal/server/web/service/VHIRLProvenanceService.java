@@ -10,6 +10,7 @@ import org.apache.commons.logging.LogFactory;
 import org.auscope.portal.core.cloud.CloudFileInformation;
 import org.auscope.portal.core.services.PortalServiceException;
 import org.auscope.portal.core.services.cloud.CloudStorageService;
+import org.auscope.portal.server.gridjob.FileInformation;
 import org.auscope.portal.server.vegl.VEGLJob;
 import org.auscope.portal.server.vegl.VglDownload;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -226,15 +228,40 @@ public class VHIRLProvenanceService {
         // Then extra files
         try {
             CloudStorageService cloudStorageService = getStorageService(job);
-            CloudFileInformation[] fileInformationSet;
-            fileInformationSet = cloudStorageService.listJobFiles(job);
+            CloudFileInformation[] fileInformationSet = cloudStorageService.listJobFiles(job);
+            List<FileInformation> fileInfos = job.getJobFiles();
 
             for (CloudFileInformation information : fileInformationSet) {
+                FileInformation metadata = null;
+                for (FileInformation meta : fileInfos) {
+                    if (meta.getFileName().equals(information.getName()))
+                        metadata = meta;
+                }
+
                 URI inputURI = new URI(outputURL(
                         job, information, serverURL()));
                 LOGGER.debug("New Input: " + inputURI.toString());
-                inputs.add(new Entity().setDataUri(inputURI)
-                        .setWasAttributedTo(new URI(MAIL + job.getUser())));
+                if (metadata == null) {
+                    inputs.add(new Entity().setDataUri(inputURI)
+                            .setWasAttributedTo(new URI(MAIL + job.getUser())));
+                } else {
+                    URI copyrightURI = null;
+                    if (metadata.getCopyright() != null)
+                    try {
+                        copyrightURI = new URI(metadata.getCopyright());
+                    } catch (URISyntaxException e) {
+                        LOGGER.warn("Unable to convert copyright information into a URI.");
+                    }
+                    URI owner = new URI(MAIL + metadata.getOwner());
+                    if (metadata.getOwner() == null || metadata.getOwner().isEmpty())
+                        owner = new URI(MAIL + job.getUser());
+                    inputs.add(new Entity().setDataUri(inputURI)
+                            .setTitle(metadata.getName())
+                            .setRights(copyrightURI)
+                            .setGeneratedAtTime(metadata.getDate())
+                            .setDescription(metadata.getDescription())
+                            .setWasAttributedTo(owner));
+                }
             }
         } catch (PortalServiceException e) {
             LOGGER.error(String.format(

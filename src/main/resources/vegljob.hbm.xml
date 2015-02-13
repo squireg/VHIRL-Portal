@@ -36,5 +36,10 @@
             <key column="jobId" />
             <one-to-many class="org.auscope.portal.server.vegl.VglDownload" />
         </bag>
+
+        <bag name="jobFiles" lazy="false" cascade="all-delete-orphan" inverse="true">
+            <key column="jobId" />
+            <one-to-many class="org.auscope.portal.server.gridjob.FileInformation" />
+        </bag>
     </class>
 </hibernate-mapping>
