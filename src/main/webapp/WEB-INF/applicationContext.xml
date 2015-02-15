@@ -362,6 +362,7 @@
                 <value>vgldownload.hbm.xml</value>
                 <value>vglsignature.hbm.xml</value>
                 <value>scmentrysnapshot.hbm.xml</value>
+                <value>fileinformation.hbm.xml</value>
             </list>
         </property>
         <property name="hibernateProperties">

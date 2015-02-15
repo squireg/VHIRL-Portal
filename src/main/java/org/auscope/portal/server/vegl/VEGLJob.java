@@ -10,7 +10,6 @@ import org.apache.commons.logging.LogFactory;
 import org.auscope.portal.core.cloud.CloudJob;
 import org.auscope.portal.server.gridjob.FileInformation;
 import org.auscope.portal.server.vegl.VglParameter.ParameterType;
-import org.auscope.portal.server.web.service.scm.Solution;
 
 /**
  * A specialisation of a generic cloud job for the VEGL Portal

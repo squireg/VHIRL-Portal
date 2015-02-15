@@ -5,8 +5,6 @@ import au.csiro.promsclient.Entity;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import junit.framework.Assert;
-import junit.framework.TestCase;
-import nu.xom.jaxen.util.SingletonList;
 import org.auscope.portal.core.cloud.CloudFileInformation;
 import org.auscope.portal.core.services.cloud.CloudStorageService;
 import org.auscope.portal.core.test.PortalTestClass;
@@ -78,7 +76,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         final CloudFileInformation[] cloudList = {cloudFileInformation, cloudFileModel};
 
         FileInformation input = new FileInformation(cloudKey, 0, false, "", "foo@bar.com", "12/02/2013");
-        final List<FileInformation> fileInfos = new SingletonList(input);
+        final List<FileInformation> fileInfos = Arrays.asList(input);
 
         turtleJob = context.mock(VEGLJob.class, "Turtle Mock Job");
 
