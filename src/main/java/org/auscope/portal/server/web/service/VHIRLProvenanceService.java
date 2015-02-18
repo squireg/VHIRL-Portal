@@ -205,9 +205,10 @@ public class VHIRLProvenanceService {
         try {
             for (VglDownload dataset : job.getJobDownloads()) {
                 URI dataURI = new URI(dataset.getUrl());
-                URI baseURI = new URI(dataURI.getScheme() +
-                        "://" + dataURI.getAuthority() + dataURI.getPath());
+                URI baseURI = new URI(dataset.getParentUrl());
                 URI user = new URI(MAIL + job.getUser());
+                if (dataset.getOwner() != null && !dataset.getOwner().isEmpty())
+                    user = new URI(MAIL + dataset.getOwner());
                 inputs.add((ServiceEntity) new ServiceEntity()
                         .setQuery(dataURI.getQuery())
                         .setServiceBaseUri(baseURI)

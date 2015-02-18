@@ -36,11 +36,15 @@ Ext.define('vegl.util.DataSelectionUtil', {
         //Set the defaults of our new item
         var downloadOptions = {
             name : 'Subset of ' + or.get('name'),
-            description : or.get('description'),
+            description : or.get('description') + ' ' + cswRecord.get('descriptiveKeywords').join(' '),
             url : or.get('url'),
             method : 'POST',
             localPath : '/tmp/' + or.get('name'),
+            version: or.get('version'),
             crs : (defaultBbox ? defaultBbox.crs : ''),
+            parentName: or.get('name'),
+            parentUrl: or.get('url'),
+            owner: cswRecord.get('contactOrg'),
             eastBoundLongitude : (defaultBbox ? defaultBbox.eastBoundLongitude : 0),
             northBoundLatitude : (defaultBbox ? defaultBbox.northBoundLatitude : 0),
             southBoundLatitude : (defaultBbox ? defaultBbox.southBoundLatitude : 0),
