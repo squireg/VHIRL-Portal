@@ -88,13 +88,13 @@ public class JobDownloadController extends BasePortalController {
             @RequestParam("name") String name,
             @RequestParam("description") String description,
             @RequestParam("localPath") String localPath,
-            @RequestParam("parentName") String parentName,
-            @RequestParam("parentUrl") String parentUrl,
-            @RequestParam("owner") String owner,
             @RequestParam("northBoundLatitude") final Double northBoundLatitude,
             @RequestParam("eastBoundLongitude") final Double eastBoundLongitude,
             @RequestParam("southBoundLatitude") final Double southBoundLatitude,
             @RequestParam("westBoundLongitude") final Double westBoundLongitude,
+            @RequestParam("parentName") String parentName,
+            @RequestParam("parentUrl") String parentUrl,
+            @RequestParam("owner") String owner,
             @RequestParam(required=false,defaultValue="false",value="saveSession") final boolean saveSession,
             HttpServletRequest request) {
 
