@@ -205,7 +205,9 @@ public class VHIRLProvenanceService {
         try {
             for (VglDownload dataset : job.getJobDownloads()) {
                 URI dataURI = new URI(dataset.getUrl());
-                URI baseURI = new URI(dataset.getParentUrl());
+                URI baseURI = null;
+                if (dataset.getParentUrl() != null && !dataset.getParentUrl().isEmpty())
+                    baseURI = new URI(dataset.getParentUrl());
                 URI user = new URI(MAIL + job.getUser());
                 if (dataset.getOwner() != null && !dataset.getOwner().isEmpty())
                     user = new URI(MAIL + dataset.getOwner());
