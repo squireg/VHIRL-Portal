@@ -11,6 +11,9 @@
         <property name="description"/>
         <property name="url"/>
         <property name="localPath"/>
+        <property name="parentUrl"/>
+        <property name="parentName"/>
+        <property name="owner"/>
         <property name="northBoundLatitude"/>
         <property name="southBoundLatitude"/>
         <property name="eastBoundLongitude"/>
