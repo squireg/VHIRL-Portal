@@ -694,7 +694,8 @@ public class JobBuilderController extends BaseCloudController {
 
                             // PROVENANCE
                             vhirlProvenanceService.setServerURL(request.getRequestURL().toString());
-                            vhirlProvenanceService.createActivity(curJob);
+                            vhirlProvenanceService.createActivity(curJob,
+                                    scmEntryService.getJobSolution(curJob));
 
                             oldJobStatus = curJob.getStatus();
                             curJob.setStatus(JobBuilderController.STATUS_PROVISION);
