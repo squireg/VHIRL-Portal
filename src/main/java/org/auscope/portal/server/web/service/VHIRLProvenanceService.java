@@ -221,6 +221,7 @@ public class VHIRLProvenanceService {
                 if (dataset.getOwner() != null && !dataset.getOwner().isEmpty())
                     attributed = new URI(MAIL + dataset.getOwner());
                 inputs.add((ServiceEntity) new ServiceEntity()
+                        .setQueriedAtTime(new Date())
                         .setQuery(dataURI.getQuery())
                         .setServiceBaseUri(baseURI)
                         .setDataUri(dataURI)
