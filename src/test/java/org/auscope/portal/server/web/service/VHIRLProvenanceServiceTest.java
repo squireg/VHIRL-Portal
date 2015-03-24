@@ -11,6 +11,7 @@ import org.auscope.portal.core.test.PortalTestClass;
 import org.auscope.portal.server.gridjob.FileInformation;
 import org.auscope.portal.server.vegl.VEGLJob;
 import org.auscope.portal.server.vegl.VglDownload;
+import org.auscope.portal.server.web.service.scm.Solution;
 import org.jmock.Expectations;
 import org.junit.After;
 import org.junit.Before;
@@ -32,6 +33,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
     final String jobName = "Cool Job";
     final String jobDescription = "Some job I made.";
     final String activityFileName = "activity.ttl";
+    Solution solution;
     List<VglDownload> downloads = new ArrayList<>();
     VEGLJob turtleJob;
 
@@ -64,6 +66,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         final File activityFile = File.createTempFile("activity", ".ttl");
         URL turtleURL = getClass().getResource("/turtle.ttl");
         final File activityFile2 = new File(turtleURL.toURI());
+        solution = context.mock(Solution.class);
 
         vhirlProvenanceService = new VHIRLProvenanceService(fileServer, storageServices);
         vhirlProvenanceService.setServerURL(serverURL);
@@ -81,6 +84,15 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         turtleJob = context.mock(VEGLJob.class, "Turtle Mock Job");
 
         context.checking(new Expectations() {{
+            oneOf(solution).getUri();
+            will(returnValue("http://sssc.vhirl.org/solution1"));
+            oneOf(solution).getDescription();
+            will(returnValue("A Fake Solution"));
+            oneOf(solution).getName();
+            will(returnValue("FakeSol"));
+            oneOf(solution).getCreatedAt();
+            will(returnValue(new Date()));
+
             allowing(preparedJob).getId();
             will(returnValue(jobID));
             allowing(preparedJob).getStorageServiceId();
@@ -124,7 +136,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
 
     @Test
     public void testCreateActivity() throws Exception {
-        String graph = vhirlProvenanceService.createActivity(preparedJob);
+        String graph = vhirlProvenanceService.createActivity(preparedJob, solution);
         Assert.assertTrue(graph.contains(initalTurtle));
         Assert.assertTrue(graph.contains(intermediateTurtle));
     }
@@ -148,9 +160,9 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
 
     @Test
     public void testCreateEntitiesForInputs() throws Exception {
-        Set<Entity> entities = vhirlProvenanceService.createEntitiesForInputs(preparedJob);
+        Set<Entity> entities = vhirlProvenanceService.createEntitiesForInputs(preparedJob, solution);
         Assert.assertNotNull(entities);
-        Assert.assertEquals(3, entities.size());
+        Assert.assertEquals(4, entities.size());
     }
 
     @Test

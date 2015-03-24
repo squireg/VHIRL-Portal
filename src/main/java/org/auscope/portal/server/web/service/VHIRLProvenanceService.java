@@ -268,7 +268,7 @@ public class VHIRLProvenanceService {
                     inputs.add(new Entity().setDataUri(inputURI)
                             .setTitle(metadata.getName())
                             .setRights(copyrightURI)
-                            .setGeneratedAtTime(metadata.getDate())
+                            .setCreated(metadata.getDate())
                             .setDescription(metadata.getDescription())
                             .setWasAttributedTo(owner));
                 }
@@ -289,7 +289,7 @@ public class VHIRLProvenanceService {
                     .setWasAttributedTo(user)
                     .setDataUri(dataURI)
                     .setDescription(solution.getDescription())
-                    .setGeneratedAtTime(solution.getCreatedAt())
+                    .setCreated(solution.getCreatedAt())
                     .setTitle(solution.getName())
                     .setMetadataUri(dataURI));
         } catch (URISyntaxException ex) {
@@ -301,7 +301,18 @@ public class VHIRLProvenanceService {
     }
 
     public void generateAndSaveReport(Activity activity, URI PROMSURI, VEGLJob job) {
-        Report report = new ExternalReport().setActivity(activity);
+        String server = VHIRLServerURL.INSTANCE.get();
+        URI serverURL = null;
+        try {
+            serverURL = new URI(server);
+        } catch (URISyntaxException e) {
+            LOGGER.error(String.format(
+                    "Error parsing system url %s into URIs.",
+                    server), e);
+        }
+        Report report = new ExternalReport()
+                .setActivity(activity)
+                .setReportingSystemUri(serverURL);
         ProvenanceReporter reporter = new ProvenanceReporter();
         int resp = reporter.postReport(PROMSURI, report);
         this.uploadModel(report.getGraph(), job);
@@ -316,7 +327,7 @@ public class VHIRLProvenanceService {
     /**
      * Takes a completed job and finishes creating the provenance record, and
      * uploads it to the cloud. The job *must* have had
-     * {@link #createActivity(org.auscope.portal.server.vegl.VEGLJob)}
+     * {@link #createActivity(VEGLJob, Solution) createActivity}
      * called with it already. Otherwise it can't collect the relevant
      * information, and won't do anything.
      * @param job Completed virtual labs job, about which we will finish our
