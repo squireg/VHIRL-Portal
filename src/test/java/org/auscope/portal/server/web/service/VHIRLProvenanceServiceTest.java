@@ -84,13 +84,13 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         turtleJob = context.mock(VEGLJob.class, "Turtle Mock Job");
 
         context.checking(new Expectations() {{
-            oneOf(solution).getUri();
+            allowing(solution).getUri();
             will(returnValue("http://sssc.vhirl.org/solution1"));
-            oneOf(solution).getDescription();
+            allowing(solution).getDescription();
             will(returnValue("A Fake Solution"));
-            oneOf(solution).getName();
+            allowing(solution).getName();
             will(returnValue("FakeSol"));
-            oneOf(solution).getCreatedAt();
+            allowing(solution).getCreatedAt();
             will(returnValue(new Date()));
 
             allowing(preparedJob).getId();
