@@ -59,7 +59,7 @@
         <property name="emailSender"><value><![CDATA[VHIRL Admin <noreply-cg-admin@csiro.au>]]></value></property>
         <property name="emailSubject" value="VHIRL Job (%s/%s)" />
     </bean>
-    
+
 
     <bean name="jobStatusLogReader" class="org.auscope.portal.server.vegl.VGLJobStatusAndLogReader" autowire="constructor"/>
     <bean name="vhirlProvenanceService" class="org.auscope.portal.server.web.service.VHIRLProvenanceService" autowire="constructor">
@@ -86,9 +86,9 @@
             </map>
         </property>
     </bean>
-    
+
     <bean name="vglPollingJobQueueManagerDetail" class="org.springframework.scheduling.quartz.JobDetailBean">
-        <property name="jobClass" value="org.auscope.portal.server.vegl.VGLPollingJobQueueManager" />       
+        <property name="jobClass" value="org.auscope.portal.server.vegl.VGLPollingJobQueueManager" />
     </bean>
 
     <!-- Simple Trigger for vglJobStatusMonitor task, run every 5 minutes -->
@@ -97,7 +97,7 @@
         <property name="repeatInterval" value="300000" />
         <property name="startDelay" value="10000" />
     </bean>
-    
+
     <!-- Simple Trigger for vglPollingJobQueueManagerDetail task, run every 30 minutes -->
     <bean id="quotaExceededTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
         <property name="jobDetail" ref="vglPollingJobQueueManagerDetail" />

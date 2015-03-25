@@ -107,7 +107,8 @@ Ext.define('vegl.jobwizard.forms.JobObjectForm', {
                                     if (!Ext.isEmpty(jobData.computeServiceId)) {
                                         jobObjectFrm.imageStore.load({
                                             params : {
-                                                computeServiceId : jobData.computeServiceId
+                                                computeServiceId : jobData.computeServiceId,
+                                                jobId: jobData.id
                                             },
                                             callback: function(records, operation, success) {
                                                 frm.setValues(jobData);

@@ -16,20 +16,6 @@ class vl_common {
     require => Class["epel"],
   }
 
-  #upgrade pip and setuptools
-  package { ["setuptools", "distribute"]:
-    ensure => latest,
-    provider => "pip",
-    require => Class["python_pip"],
-  }
-
-  package { ["pip"]:
-    ensure => latest,
-    provider => "pip",
-    require => [Class["python_pip"],
-                Package["distribute", "setuptools"]],
-  }
-
   # I want the new one....
   package { ["ca-certificates" ]:
     ensure => latest,
@@ -41,8 +27,7 @@ class vl_common {
     ensure => installed,
     provider => "pip",
     require => [Class["python_pip"],
-                Package["setuptools", "distribute", "setuptools", "pip",
-                        "libxml2-devel", "libxslt-devel"]],
+                Package["libxml2-devel", "libxslt-devel"]],
   }
 
   # Install startup bootstrap
