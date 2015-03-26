@@ -206,30 +206,6 @@ public class TestJobBuilderController {
     }
 
     /**
-     * Tests that the retrieving of job files fails
-     * when the underlying file staging service fails.
-     * @throws Exception
-     */
-    @Test
-    public void testListJobFiles_Exception() throws Exception {
-        final String jobId = "1";
-        final VEGLJob mockJob = new VEGLJob(new Integer(jobId));
-
-        context.checking(new Expectations() {{
-            //We should have a call to our job manager to get our job object
-            oneOf(mockJobManager).getJobById(Integer.parseInt(jobId));
-            will(returnValue(mockJob));
-            //We should have a call to file staging service to get our files
-            oneOf(mockFileStagingService).listStageInDirectoryFiles(mockJob);
-            will(throwException(new PortalServiceException("test exception","test exception")));
-        }});
-
-        ModelAndView mav = controller.listJobFiles(jobId);
-        Assert.assertFalse((Boolean)mav.getModel().get("success"));
-        Assert.assertNull(mav.getModel().get("data"));
-    }
-
-    /**
      * Tests that the downloading of job file fails when
      * the underlying file staging service's file download handler fails.
      * @throws Exception
@@ -406,9 +382,12 @@ public class TestJobBuilderController {
 
             oneOf(mockFile).length();
             will(returnValue(1024L));
+
+            oneOf(mockJobManager).saveJob(jobObj);
+
         }});
 
-        ModelAndView mav = controller.uploadFile(mockMultipartRequest, mockResponse, jobObj.getId().toString());
+        ModelAndView mav = controller.uploadFile(mockMultipartRequest, mockResponse, jobObj.getId().toString(), "mock file", "mock.owner@mail.com", "12/01/2002", "http://creativecommons.org/licenses/by-nc-nd/4.0/", "mocking file");
         Assert.assertTrue((Boolean)mav.getModel().get("success"));
     }
 
@@ -432,7 +411,7 @@ public class TestJobBuilderController {
             will(throwException(new PortalServiceException("Test Exception","Test Exception")));
         }});
 
-        ModelAndView mav = controller.uploadFile(mockMultipartRequest, mockResponse, jobObj.getId().toString());
+        ModelAndView mav = controller.uploadFile(mockMultipartRequest, mockResponse, jobObj.getId().toString(), "mock file", "mock.owner@mail.com", "12/01/2002", "http://creativecommons.org/licenses/by-nc-nd/4.0/", "mocking file");
         Assert.assertFalse((Boolean)mav.getModel().get("success"));
     }
 
@@ -452,7 +431,7 @@ public class TestJobBuilderController {
             will(throwException(new Exception()));
         }});
 
-        ModelAndView mav = controller.uploadFile(mockMultipartRequest, mockResponse, jobObj.getId().toString());
+        ModelAndView mav = controller.uploadFile(mockMultipartRequest, mockResponse, jobObj.getId().toString(), "mock file", "mock.owner@mail.com", "12/01/2002", "http://creativecommons.org/licenses/by-nc-nd/4.0/", "mocking file");
         Assert.assertFalse((Boolean)mav.getModel().get("success"));
         Assert.assertNull(mav.getModel().get("data"));
     }

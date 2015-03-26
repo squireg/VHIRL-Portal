@@ -5,10 +5,10 @@ import au.csiro.promsclient.Entity;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import junit.framework.Assert;
-import junit.framework.TestCase;
 import org.auscope.portal.core.cloud.CloudFileInformation;
 import org.auscope.portal.core.services.cloud.CloudStorageService;
 import org.auscope.portal.core.test.PortalTestClass;
+import org.auscope.portal.server.gridjob.FileInformation;
 import org.auscope.portal.server.vegl.VEGLJob;
 import org.auscope.portal.server.vegl.VglDownload;
 import org.jmock.Expectations;
@@ -75,6 +75,9 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         CloudFileInformation cloudFileModel = new CloudFileInformation(activityFileName, 0, "");
         final CloudFileInformation[] cloudList = {cloudFileInformation, cloudFileModel};
 
+        FileInformation input = new FileInformation(cloudKey, 0, false, "", "foo@bar.com", "12/02/2013");
+        final List<FileInformation> fileInfos = Arrays.asList(input);
+
         turtleJob = context.mock(VEGLJob.class, "Turtle Mock Job");
 
         context.checking(new Expectations() {{
@@ -92,6 +95,8 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
             will(returnValue(new Date()));
             allowing(preparedJob).getUser();
             will(returnValue("foo@test.com"));
+            allowing(preparedJob).getJobFiles();
+            will(returnValue(fileInfos));
 
             allowing(fileInformation).getCloudKey();
             will(returnValue(cloudKey));

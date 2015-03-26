@@ -8,8 +8,8 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.auscope.portal.core.cloud.CloudJob;
+import org.auscope.portal.server.gridjob.FileInformation;
 import org.auscope.portal.server.vegl.VglParameter.ParameterType;
-import org.auscope.portal.server.web.service.scm.Solution;
 
 /**
  * A specialisation of a generic cloud job for the VEGL Portal
@@ -32,6 +32,9 @@ public class VEGLJob extends CloudJob implements Cloneable {
     private Map<String, VglParameter> jobParameters = new HashMap<String, VglParameter>();
     /** A list of VglDownload objects associated with this job*/
     private List<VglDownload> jobDownloads = new ArrayList<VglDownload>();
+
+    /** A list of FileInformation objects associated with this job*/
+    private List<FileInformation> jobFiles = new ArrayList<FileInformation>();
 
     /**
      * Creates an unitialised VEGLJob
@@ -193,6 +196,18 @@ public class VEGLJob extends CloudJob implements Cloneable {
         this.jobDownloads = jobDownloads;
         for (VglDownload dl : jobDownloads) {
             dl.setParent(this);
+        }
+    }
+
+
+    public List<FileInformation> getJobFiles() {
+        return jobFiles;
+    }
+
+    public void setJobFiles(List<FileInformation> jobFiles) {
+        this.jobFiles = jobFiles;
+        for (FileInformation fi : jobFiles) {
+            fi.setParent(this);
         }
     }
 

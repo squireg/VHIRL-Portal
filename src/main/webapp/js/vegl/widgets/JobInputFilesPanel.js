@@ -95,7 +95,7 @@ Ext.define('vegl.widgets.JobInputFilesPanel', {
                 groupField : 'group',
                 data : []
             }),
-            columns: [{ header: 'Name', width: 200, sortable: true, dataIndex: 'name'},
+            columns: [{ header: 'File Name', width: 200, sortable: true, dataIndex: 'fileName'},
                       { header: 'Location', width: 200, dataIndex: 'localPath'},
                       { header: 'Details', flex : 1, dataIndex: 'details'}],
             tbar: [{

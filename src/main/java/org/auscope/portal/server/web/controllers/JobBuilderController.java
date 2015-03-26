@@ -136,10 +136,11 @@ public class JobBuilderController extends BaseCloudController {
      * @param file
      * @return
      */
-    private FileInformation stagedFileToFileInformation(StagedFile file) {
+    private FileInformation stagedFileToFileInformation(StagedFile file, String name, String owner, String date, String description, String copyright) {
         File internalFile = file.getFile();
         long length = internalFile == null ? 0 : internalFile.length();
-        return new FileInformation(file.getName(), length, false, "");
+        if (name == null || name.isEmpty()) name = file.getName();
+        return new FileInformation(file.getName(), name, length, false, "", owner, date, description, copyright);
     }
 
     /**
@@ -163,18 +164,7 @@ public class JobBuilderController extends BaseCloudController {
             return generateJSONResponseMAV(false, null, "Error fetching job with id " + jobId);
         }
 
-        //Get our files
-        StagedFile[] files = null;
-        try {
-            files = vhirlFileStagingService.listStageInDirectoryFiles(job);
-        } catch (Exception ex) {
-            logger.error("Error listing job stage in directory", ex);
-            return generateJSONResponseMAV(false, null, "Error reading job stage in directory");
-        }
-        List<FileInformation> fileInfos = new ArrayList<FileInformation>();
-        for (StagedFile file : files) {
-            fileInfos.add(stagedFileToFileInformation(file));
-        }
+        List<FileInformation> fileInfos = job.getJobFiles();
 
         return generateJSONResponseMAV(true, fileInfos, "");
     }
@@ -215,7 +205,13 @@ public class JobBuilderController extends BaseCloudController {
     @RequestMapping("/uploadFile.do")
     public ModelAndView uploadFile(HttpServletRequest request,
             HttpServletResponse response,
-            @RequestParam("jobId") String jobId) {
+            @RequestParam("jobId") String jobId,
+            @RequestParam("name") String name,
+            @RequestParam("owner") String owner,
+            @RequestParam("date") String date,
+            @RequestParam("copyright") String copyright,
+            @RequestParam("description") String description
+    ) {
 
         //Lookup our job
         VEGLJob job = null;
@@ -226,7 +222,6 @@ public class JobBuilderController extends BaseCloudController {
             return generateJSONResponseMAV(false, null, "Error fetching job with id " + jobId);
         }
 
-
         List<StagedFile> files = new ArrayList<StagedFile>();
         try {
             files = vhirlFileStagingService.handleMultiFileUpload(job, (MultipartHttpServletRequest) request);
@@ -234,11 +229,29 @@ public class JobBuilderController extends BaseCloudController {
             logger.error("Error uploading file(s)", ex);
             return generateJSONResponseMAV(false, null, "Error uploading file(s)");
         }
+
         List<FileInformation> fileInfos = new ArrayList<FileInformation>();
+        List<FileInformation> existingFiles = job.getJobFiles();
         for (StagedFile file : files) {
-            fileInfos.add(stagedFileToFileInformation(file));
+            FileInformation fileInfo = stagedFileToFileInformation(file, name, owner, date, description, copyright);
+            fileInfos.add(fileInfo);
+            existingFiles.add(fileInfo);
+        }
+        job.setJobFiles(existingFiles);
+
+        try {
+            jobManager.saveJob(job);
+        } catch (Exception ex) {
+            logger.error("Error updating job files" + job, ex);
+            return generateJSONResponseMAV(false, null, "Error saving job");
         }
 
+        try {
+            VEGLJob job2 = jobManager.getJobById(Integer.parseInt(jobId));
+        } catch (Exception ex) {
+            logger.error("Error fetching job with id " + jobId, ex);
+            return generateJSONResponseMAV(false, null, "Error fetching job with id " + jobId);
+        }
 
         //We have to use a HTML response due to ExtJS's use of a hidden iframe for file uploads
         //Failure to do this will result in the upload working BUT the user will also get prompted
