@@ -13,6 +13,7 @@ import org.auscope.portal.core.services.cloud.CloudStorageService;
 import org.auscope.portal.server.gridjob.FileInformation;
 import org.auscope.portal.server.vegl.VEGLJob;
 import org.auscope.portal.server.vegl.VglDownload;
+import org.auscope.portal.server.web.service.scm.Solution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -97,10 +98,10 @@ public class VHIRLProvenanceService {
      *            should be just about to execute, but not yet have started.
      * @return The TURTLE text.
      */
-    public final String createActivity(final VEGLJob job) {
+    public final String createActivity(final VEGLJob job, final Solution solution) {
         String jobURL = jobURL(job, serverURL());
         Activity vhirlJob = null;
-        Set<Entity> inputs = createEntitiesForInputs(job);
+        Set<Entity> inputs = createEntitiesForInputs(job, solution);
         try {
             vhirlJob = new Activity()
                     .setActivityUri(new URI(jobURL))
@@ -199,8 +200,16 @@ public class VHIRLProvenanceService {
      * @param job The virtual labs job we want to examine the inputs of.
      * @return An array of PROV-O entities. May be empty, but won't be null.
      */
-    public Set<Entity> createEntitiesForInputs(final VEGLJob job) {
+    public Set<Entity> createEntitiesForInputs(final VEGLJob job, final Solution solution) {
         Set<Entity> inputs = new HashSet<>();
+        URI user = null;
+        try {
+            user = new URI(MAIL + job.getUser());
+        } catch (URISyntaxException ex) {
+            LOGGER.error(String.format(
+                    "Error parsing username %s to URI.",
+                    job.getUser()), ex);
+        }
         // Downloads first
         try {
             for (VglDownload dataset : job.getJobDownloads()) {
@@ -208,15 +217,16 @@ public class VHIRLProvenanceService {
                 URI baseURI = null;
                 if (dataset.getParentUrl() != null && !dataset.getParentUrl().isEmpty())
                     baseURI = new URI(dataset.getParentUrl());
-                URI user = new URI(MAIL + job.getUser());
+                URI attributed = user;
                 if (dataset.getOwner() != null && !dataset.getOwner().isEmpty())
-                    user = new URI(MAIL + dataset.getOwner());
+                    attributed = new URI(MAIL + dataset.getOwner());
                 inputs.add((ServiceEntity) new ServiceEntity()
+                        .setQueriedAtTime(new Date())
                         .setQuery(dataURI.getQuery())
                         .setServiceBaseUri(baseURI)
                         .setDataUri(dataURI)
                         .setDescription(dataset.getDescription())
-                        .setWasAttributedTo(user)
+                        .setWasAttributedTo(attributed)
                         .setTitle(dataset.getName()));
                 LOGGER.debug("New Input: " + dataset.getUrl());
             }
@@ -254,11 +264,11 @@ public class VHIRLProvenanceService {
                     }
                     URI owner = new URI(MAIL + metadata.getOwner());
                     if (metadata.getOwner() == null || metadata.getOwner().isEmpty())
-                        owner = new URI(MAIL + job.getUser());
+                        owner = user;
                     inputs.add(new Entity().setDataUri(inputURI)
                             .setTitle(metadata.getName())
                             .setRights(copyrightURI)
-                            .setGeneratedAtTime(metadata.getDate())
+                            .setCreated(metadata.getDate())
                             .setDescription(metadata.getDescription())
                             .setWasAttributedTo(owner));
                 }
@@ -272,11 +282,37 @@ public class VHIRLProvenanceService {
                     "Error parsing data source urls %s into URIs.",
                     job.getJobDownloads().toString()), ex);
         }
+        // Finally the SSSC Solution
+        try {
+            URI dataURI = new URI(solution.getUri());
+            inputs.add(new Entity()
+                    .setWasAttributedTo(user)
+                    .setDataUri(dataURI)
+                    .setDescription(solution.getDescription())
+                    .setCreated(solution.getCreatedAt())
+                    .setTitle(solution.getName())
+                    .setMetadataUri(dataURI));
+        } catch (URISyntaxException ex) {
+            LOGGER.error(String.format(
+                    "Error parsing data source urls %s into URIs.",
+                    solution.getUri()), ex);
+        }
         return inputs;
     }
 
     public void generateAndSaveReport(Activity activity, URI PROMSURI, VEGLJob job) {
-        Report report = new ExternalReport().setActivity(activity);
+        String server = VHIRLServerURL.INSTANCE.get();
+        URI serverURL = null;
+        try {
+            serverURL = new URI(server);
+        } catch (URISyntaxException e) {
+            LOGGER.error(String.format(
+                    "Error parsing system url %s into URIs.",
+                    server), e);
+        }
+        Report report = new ExternalReport()
+                .setActivity(activity)
+                .setReportingSystemUri(serverURL);
         ProvenanceReporter reporter = new ProvenanceReporter();
         int resp = reporter.postReport(PROMSURI, report);
         this.uploadModel(report.getGraph(), job);
@@ -291,7 +327,7 @@ public class VHIRLProvenanceService {
     /**
      * Takes a completed job and finishes creating the provenance record, and
      * uploads it to the cloud. The job *must* have had
-     * {@link #createActivity(org.auscope.portal.server.vegl.VEGLJob)}
+     * {@link #createActivity(VEGLJob, Solution) createActivity}
      * called with it already. Otherwise it can't collect the relevant
      * information, and won't do anything.
      * @param job Completed virtual labs job, about which we will finish our

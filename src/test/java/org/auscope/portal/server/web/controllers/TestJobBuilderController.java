@@ -3,11 +3,7 @@ package org.auscope.portal.server.web.controllers;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,6 +35,7 @@ import org.auscope.portal.server.web.service.ScmEntryService;
 import org.auscope.portal.server.web.service.VHIRLFileStagingService;
 import org.auscope.portal.server.web.service.VHIRLProvenanceService;
 import org.auscope.portal.server.web.service.monitor.VGLJobStatusChangeHandler;
+import org.auscope.portal.server.web.service.scm.Solution;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.Sequence;
@@ -592,6 +589,8 @@ public class TestJobBuilderController {
         final String storageAuthVersion = "1.2.3";
         final String regionName = null;
 
+        final Solution mockSolution = context.mock(Solution.class);
+
 
         final File activityFile = File.createTempFile("activity", ".ttl");
         final String activityFileName = "activity.ttl";
@@ -606,6 +605,12 @@ public class TestJobBuilderController {
         jobObj.setStorageServiceId(storageServiceId);
 
         context.checking(new Expectations() {{
+            oneOf(mockScmEntryService).getJobSolution(jobObj);will(returnValue(mockSolution));
+            oneOf(mockSolution).getUri();will(returnValue("http://sssc.vhirl.org/solution1"));
+            oneOf(mockSolution).getDescription();will(returnValue("A Fake Solution"));
+            oneOf(mockSolution).getName();will(returnValue("FakeSol"));
+            oneOf(mockSolution).getCreatedAt();will(returnValue(new Date()));
+
             //We should have access control check to ensure user has permission to run the job
             oneOf(mockCloudComputeServices[0]).getAvailableImages();will(returnValue(mockImages));
             oneOf(mockImages[0]).getImageId();will(returnValue("compute-vmi-id"));
@@ -824,6 +829,7 @@ public class TestJobBuilderController {
         final String regionName = "region-name";
         final PortalServiceException exception = new PortalServiceException("Some random error","Some error correction");
 
+        final Solution mockSolution = context.mock(Solution.class);
 
         final File activityFile = File.createTempFile("activity", ".ttl");
         final String activityFileName = "activity.ttl";
@@ -843,6 +849,13 @@ public class TestJobBuilderController {
         context.checking(new Expectations() {{
             //We should have 1 call to our job manager to get our job object and 1 call to save it
             oneOf(mockJobManager).getJobById(jobObj.getId());will(returnValue(jobObj));
+
+
+            oneOf(mockScmEntryService).getJobSolution(jobObj);will(returnValue(mockSolution));
+            oneOf(mockSolution).getUri();will(returnValue("http://sssc.vhirl.org/solution1"));
+            oneOf(mockSolution).getDescription();will(returnValue("A Fake Solution"));
+            oneOf(mockSolution).getName();will(returnValue("FakeSol"));
+            oneOf(mockSolution).getCreatedAt();will(returnValue(new Date()));
 
             oneOf(mockFileStagingService).writeFile(jobObj, JobBuilderController.DOWNLOAD_SCRIPT);
             will(returnValue(mockOutputStream));
@@ -946,6 +959,7 @@ public class TestJobBuilderController {
         CloudFileInformation cloudFileModel = new CloudFileInformation("two", 0, "");
         final CloudFileInformation[] cloudList = {cloudFileInformation, cloudFileModel};
 
+        final Solution mockSolution = context.mock(Solution.class);
 
         jobObj.setComputeVmId(computeVmId);
         //As submitJob method no longer explicitly checks for empty storage credentials,
@@ -963,6 +977,13 @@ public class TestJobBuilderController {
             oneOf(mockFileStagingService).writeFile(jobObj, JobBuilderController.DOWNLOAD_SCRIPT);
             will(returnValue(mockOutputStream));
             allowing(mockOutputStream).close();
+
+
+            oneOf(mockScmEntryService).getJobSolution(jobObj);will(returnValue(mockSolution));
+            oneOf(mockSolution).getUri();will(returnValue("http://sssc.vhirl.org/solution1"));
+            oneOf(mockSolution).getDescription();will(returnValue("A Fake Solution"));
+            oneOf(mockSolution).getName();will(returnValue("FakeSol"));
+            oneOf(mockSolution).getCreatedAt();will(returnValue(new Date()));
 
             //We should have 1 call to get our stage in files
             oneOf(mockFileStagingService).listStageInDirectoryFiles(jobObj);will(returnValue(stageInFiles));
