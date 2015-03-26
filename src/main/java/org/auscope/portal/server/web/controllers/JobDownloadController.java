@@ -92,6 +92,9 @@ public class JobDownloadController extends BasePortalController {
             @RequestParam("eastBoundLongitude") final Double eastBoundLongitude,
             @RequestParam("southBoundLatitude") final Double southBoundLatitude,
             @RequestParam("westBoundLongitude") final Double westBoundLongitude,
+            @RequestParam("parentName") String parentName,
+            @RequestParam("parentUrl") String parentUrl,
+            @RequestParam("owner") String owner,
             @RequestParam(required=false,defaultValue="false",value="saveSession") final boolean saveSession,
             HttpServletRequest request) {
 
@@ -104,6 +107,9 @@ public class JobDownloadController extends BasePortalController {
         newDownload.setEastBoundLongitude(eastBoundLongitude);
         newDownload.setSouthBoundLatitude(southBoundLatitude);
         newDownload.setWestBoundLongitude(westBoundLongitude);
+        newDownload.setOwner(owner);
+        newDownload.setParentName(parentName);
+        newDownload.setParentUrl(parentUrl);
 
         if (saveSession) {
             addDownloadToSession(request, newDownload);
@@ -128,6 +134,9 @@ public class JobDownloadController extends BasePortalController {
                                 @RequestParam("name") final String name,
                                 @RequestParam("description") final String description,
                                 @RequestParam("localPath") final String localPath,
+                                @RequestParam("parentName") String parentName,
+                                @RequestParam("parentUrl") String parentUrl,
+                                @RequestParam("owner") String owner,
                                 @RequestParam(required=false,defaultValue="false",value="saveSession") final boolean saveSession,
                                 HttpServletRequest request,
                                 HttpServletResponse response) throws Exception {
@@ -146,6 +155,9 @@ public class JobDownloadController extends BasePortalController {
         newDownload.setEastBoundLongitude(eastBoundLongitude);
         newDownload.setSouthBoundLatitude(southBoundLatitude);
         newDownload.setWestBoundLongitude(westBoundLongitude);
+        newDownload.setOwner(owner);
+        newDownload.setParentName(parentName);
+        newDownload.setParentUrl(parentUrl);
 
         if (saveSession) {
             addDownloadToSession(request, newDownload);
@@ -170,6 +182,9 @@ public class JobDownloadController extends BasePortalController {
                                 @RequestParam("name") final String name,
                                 @RequestParam("description") final String description,
                                 @RequestParam("localPath") final String localPath,
+                                @RequestParam("parentName") String parentName,
+                                @RequestParam("parentUrl") String parentUrl,
+                                @RequestParam("owner") String owner,
                                 @RequestParam(required=false,defaultValue="false",value="saveSession") final boolean saveSession,
                                 HttpServletRequest request,
                                 HttpServletResponse response) throws Exception {
@@ -188,6 +203,10 @@ public class JobDownloadController extends BasePortalController {
         newDownload.setEastBoundLongitude(eastBoundLongitude);
         newDownload.setSouthBoundLatitude(southBoundLatitude);
         newDownload.setWestBoundLongitude(westBoundLongitude);
+        newDownload.setOwner(owner);
+        newDownload.setParentName(parentName);
+        newDownload.setParentUrl(parentUrl);
+
 
         if (saveSession) {
             addDownloadToSession(request, newDownload);
@@ -219,6 +238,9 @@ public class JobDownloadController extends BasePortalController {
                                            @RequestParam("name") final String name,
                                            @RequestParam("description") final String description,
                                            @RequestParam("localPath") final String localPath,
+                                           @RequestParam("parentName") String parentName,
+                                           @RequestParam("parentUrl") String parentUrl,
+                                           @RequestParam("owner") String owner,
                                            @RequestParam(required=false,defaultValue="false",value="saveSession") final boolean saveSession,
                                            HttpServletRequest request) throws Exception {
 
@@ -246,6 +268,10 @@ public class JobDownloadController extends BasePortalController {
         newDownload.setEastBoundLongitude(eastBoundLongitude);
         newDownload.setSouthBoundLatitude(southBoundLatitude);
         newDownload.setWestBoundLongitude(westBoundLongitude);
+        newDownload.setOwner(owner);
+        newDownload.setParentName(parentName);
+        newDownload.setParentUrl(parentUrl);
+
         
         if (saveSession) {
             addDownloadToSession(request, newDownload);
