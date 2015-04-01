@@ -312,6 +312,8 @@ public class VHIRLProvenanceService {
         }
         Report report = new ExternalReport()
                 .setActivity(activity)
+                .setTitle(job.getName())
+                .setNativeId(Integer.toString(job.getId()))
                 .setReportingSystemUri(serverURL);
         ProvenanceReporter reporter = new ProvenanceReporter();
         int resp = reporter.postReport(PROMSURI, report);
