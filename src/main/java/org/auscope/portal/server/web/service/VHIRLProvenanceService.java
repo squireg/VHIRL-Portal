@@ -49,7 +49,7 @@ public class VHIRLProvenanceService {
     }
 
     /* Can be changed in application context */
-    private String promsUrl = "http://proms.csiro.au";
+    private String promsUrl = "http://proms-dev.vhirl.net/id/report/";
     private URI PROMSService = null;
 
     /** URL of the current webserver. Will need to be set by classes
@@ -388,6 +388,14 @@ public class VHIRLProvenanceService {
                 }
             }
             activity.setGeneratedEntities(outputs);
+            if (!PROMSService.toString().equals(promsUrl)) {
+                try {
+                    PROMSService = new URI(promsUrl);
+                } catch (URISyntaxException e) {
+                    LOGGER.debug(e.getLocalizedMessage());
+                }
+            }
+            LOGGER.info("Reporting to: " + PROMSService.toString());
             generateAndSaveReport(activity, PROMSService, job);
             StringWriter out = new StringWriter();
             activity.getGraph().write(out, TURTLE_FORMAT, serverURL());
