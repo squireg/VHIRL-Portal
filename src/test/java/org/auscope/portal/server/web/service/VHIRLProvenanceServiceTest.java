@@ -195,7 +195,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
                     .setReportingSystemUri(new URI(serverURL));
             ProvenanceReporter reporter = new ProvenanceReporter();
             int resp = reporter.postReport(new URI(PROMSURI), report);
-            Assert.assertEquals(200, resp);
+            Assert.assertTrue((resp == 200 || resp == 201));
         }
 
 
