@@ -1,7 +1,6 @@
 package org.auscope.portal.server.web.service;
 
-import au.csiro.promsclient.Activity;
-import au.csiro.promsclient.Entity;
+import au.csiro.promsclient.*;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import junit.framework.Assert;
@@ -33,6 +32,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
     final String jobName = "Cool Job";
     final String jobDescription = "Some job I made.";
     final String activityFileName = "activity.ttl";
+    final String PROMSURI = "http://proms-dev.vhirl.net/id/report/";
     Solution solution;
     List<VglDownload> downloads = new ArrayList<>();
     VEGLJob turtleJob;
@@ -170,6 +170,35 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         String graph = vhirlProvenanceService.createEntitiesForOutputs(preparedJob);
         Assert.assertTrue(graph.contains(initalTurtle));
         Assert.assertTrue(graph.contains(endedTurtle));
+    }
+
+    @Test
+    public void testPost() throws Exception {
+        Set<Entity> outputs = new HashSet<>();
+        InputStream activityStream = getClass().getResourceAsStream("/activity.ttl");
+        Activity activity;
+        Model model = ModelFactory.createDefaultModel();
+        model = model.read(activityStream,
+                serverURL,
+                "TURTLE");
+        activity = new Activity().setActivityUri(new URI(
+                vhirlProvenanceService.jobURL(turtleJob, serverURL))).setFromModel(model);
+        if (activity != null) {
+            activity.setEndedAtTime(new Date());
+            String outputURL = serverURL + "/secure/jobFile.do?jobId=21&key=job-macgo-bt-everbloom_gmail_com-0000000021/1000_yrRP_hazard_map.png";
+            outputs.add(new Entity().setDataUri(new URI(outputURL)).setWasAttributedTo(new URI("mailto:jo@blogs.com")).setTitle("1000_yrRP_hazard_map.png"));
+            activity.setGeneratedEntities(outputs);
+            Report report = new ExternalReport()
+                    .setActivity(activity)
+                    .setTitle(jobName)
+                    .setNativeId(Integer.toString(jobID))
+                    .setReportingSystemUri(new URI(serverURL));
+            ProvenanceReporter reporter = new ProvenanceReporter();
+            int resp = reporter.postReport(new URI(PROMSURI), report);
+            Assert.assertTrue((resp == 200 || resp == 201));
+        }
+
+
     }
 
     @Test
