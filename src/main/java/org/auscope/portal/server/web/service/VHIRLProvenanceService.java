@@ -253,6 +253,8 @@ public class VHIRLProvenanceService {
 
                 String[] filePath = inputURI.getPath().split("/");
                 String fileName = filePath[filePath.length - 1];
+                if (information.getName() != null && !information.getName().equals(""))
+                    fileName = information.getName();
                 LOGGER.debug("New Input: " + inputURI.toString());
                 if (metadata == null) {
                     inputs.add(new Entity().setDataUri(inputURI)

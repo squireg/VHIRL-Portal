@@ -42,6 +42,8 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
 
     final String intermediateTurtle =
             "      a       <http://www.w3.org/ns/prov#Entity> ;" + System.lineSeparator() +
+            "      <http://www.w3.org/2000/01/rdf-schema#label>" + System.lineSeparator() +
+            "              \"activity.ttl\"^^<http://www.w3.org/2001/XMLSchema#string> ;" + System.lineSeparator() +
             "      <http://www.w3.org/ns/dcat#downloadURL>" + System.lineSeparator() +
             "              \"http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=activity.ttl\"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;" + System.lineSeparator() +
             "      <http://www.w3.org/ns/prov#wasAttributedTo>" + System.lineSeparator() +
