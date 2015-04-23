@@ -250,9 +250,13 @@ public class VHIRLProvenanceService {
 
                 URI inputURI = new URI(outputURL(
                         job, information, serverURL()));
+
+                String[] filePath = inputURI.getPath().split("/");
+                String fileName = filePath[filePath.length - 1];
                 LOGGER.debug("New Input: " + inputURI.toString());
                 if (metadata == null) {
                     inputs.add(new Entity().setDataUri(inputURI)
+                            .setTitle(fileName)
                             .setWasAttributedTo(new URI(MAIL + job.getUser())));
                 } else {
                     URI copyrightURI = null;
@@ -265,8 +269,10 @@ public class VHIRLProvenanceService {
                     URI owner = new URI(MAIL + metadata.getOwner());
                     if (metadata.getOwner() == null || metadata.getOwner().isEmpty())
                         owner = user;
+                    if (metadata.getName() != null && !metadata.getName().equals(""))
+                        fileName = metadata.getName();
                     inputs.add(new Entity().setDataUri(inputURI)
-                            .setTitle(metadata.getName())
+                            .setTitle(fileName)
                             .setRights(copyrightURI)
                             .setCreated(metadata.getDate())
                             .setDescription(metadata.getDescription())
@@ -362,11 +368,12 @@ public class VHIRLProvenanceService {
                     activity = new Activity().setActivityUri(new URI(
                             jobURL(job, serverURL()))).setFromModel(model);
                 } else if (!names.contains(information.getName())) {
-                    // Ah ha! This must be an output or input.
+                    // Ah ha! This must be an output.
                     URI outputURI = new URI(outputURL(
                             job, information, serverURL()));
                     LOGGER.debug("New input/output: " + outputURI.toString());
                     potentialOutputs.add(new Entity().setDataUri(outputURI)
+                            .setTitle(information.getName())
                             .setWasAttributedTo(new URI(MAIL + job.getUser())));
                 }
             }
