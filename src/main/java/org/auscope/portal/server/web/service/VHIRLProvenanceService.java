@@ -224,9 +224,9 @@ public class VHIRLProvenanceService {
                         .setQueriedAtTime(new Date())
                         .setQuery(dataURI.getQuery())
                         .setServiceBaseUri(baseURI)
-                        .setDataUri(dataURI)
                         .setDescription(dataset.getDescription())
                         .setWasAttributedTo(attributed)
+                        .setEntityUri(dataURI)
                         .setTitle(dataset.getName()));
                 LOGGER.debug("New Input: " + dataset.getUrl());
             }
@@ -287,7 +287,7 @@ public class VHIRLProvenanceService {
             URI dataURI = new URI(solution.getUri());
             inputs.add(new Entity()
                     .setWasAttributedTo(user)
-                    .setDataUri(dataURI)
+                    .setEntityUri(dataURI)
                     .setDescription(solution.getDescription())
                     .setCreated(solution.getCreatedAt())
                     .setTitle(solution.getName())
