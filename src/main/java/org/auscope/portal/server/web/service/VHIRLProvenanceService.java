@@ -13,6 +13,7 @@ import org.auscope.portal.core.services.cloud.CloudStorageService;
 import org.auscope.portal.server.gridjob.FileInformation;
 import org.auscope.portal.server.vegl.VEGLJob;
 import org.auscope.portal.server.vegl.VglDownload;
+import org.auscope.portal.server.web.security.VHIRLUser;
 import org.auscope.portal.server.web.service.scm.Solution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -98,17 +99,19 @@ public class VHIRLProvenanceService {
      *            should be just about to execute, but not yet have started.
      * @return The TURTLE text.
      */
-    public final String createActivity(final VEGLJob job, final Solution solution) {
+    public final String createActivity(final VEGLJob job, final Solution solution, VHIRLUser user) {
         String jobURL = jobURL(job, serverURL());
         Activity vhirlJob = null;
-        Set<Entity> inputs = createEntitiesForInputs(job, solution);
+
+        Set<Entity> inputs = createEntitiesForInputs(job, solution, user);
+        String userLink = user.getLink().toString();
         try {
             vhirlJob = new Activity()
                     .setActivityUri(new URI(jobURL))
                     .setTitle(job.getName())
                     .setDescription(job.getDescription())
                     .setStartedAtTime(new Date())
-                    .wasAssociatedWith(MAIL + job.getUser())
+                    .wasAssociatedWith(userLink)
                     .setUsedEntities(inputs);
         } catch (URISyntaxException ex) {
             LOGGER.error(String.format("Error parsing server name %s into URI.",
@@ -200,16 +203,9 @@ public class VHIRLProvenanceService {
      * @param job The virtual labs job we want to examine the inputs of.
      * @return An array of PROV-O entities. May be empty, but won't be null.
      */
-    public Set<Entity> createEntitiesForInputs(final VEGLJob job, final Solution solution) {
+    public Set<Entity> createEntitiesForInputs(final VEGLJob job, final Solution solution, VHIRLUser vhirlUser) {
         Set<Entity> inputs = new HashSet<>();
-        URI user = null;
-        try {
-            user = new URI(MAIL + job.getUser());
-        } catch (URISyntaxException ex) {
-            LOGGER.error(String.format(
-                    "Error parsing username %s to URI.",
-                    job.getUser()), ex);
-        }
+        URI user = vhirlUser.getLink();
         // Downloads first
         try {
             for (VglDownload dataset : job.getJobDownloads()) {
@@ -218,8 +214,9 @@ public class VHIRLProvenanceService {
                 if (dataset.getParentUrl() != null && !dataset.getParentUrl().isEmpty())
                     baseURI = new URI(dataset.getParentUrl());
                 URI attributed = user;
-                if (dataset.getOwner() != null && !dataset.getOwner().isEmpty())
+                if (dataset.getOwner() != null && !dataset.getOwner().isEmpty()) {
                     attributed = new URI(MAIL + dataset.getOwner());
+                }
                 inputs.add((ServiceEntity) new ServiceEntity()
                         .setQueriedAtTime(new Date())
                         .setQuery(dataURI.getQuery())

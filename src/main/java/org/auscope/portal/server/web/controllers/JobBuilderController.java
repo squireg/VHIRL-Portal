@@ -41,6 +41,7 @@ import org.auscope.portal.server.vegl.VGLQueueJob;
 import org.auscope.portal.server.vegl.VglDownload;
 import org.auscope.portal.server.vegl.VglMachineImage;
 import org.auscope.portal.server.vegl.VglParameter.ParameterType;
+import org.auscope.portal.server.web.security.VHIRLUser;
 import org.auscope.portal.server.web.service.VHIRLFileStagingService;
 import org.auscope.portal.server.web.service.VHIRLProvenanceService;
 import org.auscope.portal.server.web.service.ScmEntryService;
@@ -628,7 +629,8 @@ public class JobBuilderController extends BaseCloudController {
     @RequestMapping("/secure/submitJob.do")
     public ModelAndView submitJob(HttpServletRequest request,
             HttpServletResponse response,
-            @RequestParam("jobId") String jobId) {
+            @RequestParam("jobId") String jobId,
+            @AuthenticationPrincipal VHIRLUser user) {
         boolean succeeded = false;
         String oldJobStatus = null, errorDescription = null, errorCorrection = null;
         VEGLJob curJob = null;
@@ -698,7 +700,7 @@ public class JobBuilderController extends BaseCloudController {
                             // PROVENANCE
                             vhirlProvenanceService.setServerURL(request.getRequestURL().toString());
                             vhirlProvenanceService.createActivity(curJob,
-                                    scmEntryService.getJobSolution(curJob));
+                                    scmEntryService.getJobSolution(curJob), user);
 
                             oldJobStatus = curJob.getStatus();
                             curJob.setStatus(JobBuilderController.STATUS_PROVISION);
