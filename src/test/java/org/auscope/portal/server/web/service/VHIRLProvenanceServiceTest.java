@@ -34,6 +34,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
     final String jobDescription = "Some job I made.";
     final String activityFileName = "activity.ttl";
     final String PROMSURI = "http://proms-dev.vhirl.net/id/report/";
+    URI mockProfileUrl;
     VHIRLUser mockPortalUser;
     Solution solution;
     List<VglDownload> downloads = new ArrayList<>();
@@ -49,7 +50,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
             "      <http://www.w3.org/ns/dcat#downloadURL>" + System.lineSeparator() +
             "              \"http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=activity.ttl\"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;" + System.lineSeparator() +
             "      <http://www.w3.org/ns/prov#wasAttributedTo>" + System.lineSeparator() +
-            "              \"mailto:foo@test.com\"^^<http://www.w3.org/2001/XMLSchema#string> .";
+            "              <https://plus.google.com/1> .";
 
     final String endedTurtle = "<http://www.w3.org/ns/prov#endedAtTime>";
     final String file1Turtle =
@@ -57,7 +58,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
             "      <http://www.w3.org/ns/dcat#downloadURL>" + System.lineSeparator() +
             "              \"http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=cloudKey\"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;" + System.lineSeparator() +
             "      <http://www.w3.org/ns/prov#wasAttributedTo>" + System.lineSeparator() +
-            "              \"mailto:foo@test.com\"^^<http://www.w3.org/2001/XMLSchema#string> .";
+            "              <https://plus.google.com/1> .";
 
     VHIRLProvenanceService vhirlProvenanceService;
 
@@ -72,7 +73,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         URL turtleURL = getClass().getResource("/turtle.ttl");
         final File activityFile2 = new File(turtleURL.toURI());
         solution = context.mock(Solution.class);
-        final URI mockProfileUrl = new URI("https://plus.google.com/1");
+        mockProfileUrl = new URI("https://plus.google.com/1");
 
         vhirlProvenanceService = new VHIRLProvenanceService(fileServer, storageServices);
         vhirlProvenanceService.setServerURL(serverURL);
@@ -195,7 +196,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         if (activity != null) {
             activity.setEndedAtTime(new Date());
             String outputURL = serverURL + "/secure/jobFile.do?jobId=21&key=job-macgo-bt-everbloom_gmail_com-0000000021/1000_yrRP_hazard_map.png";
-            outputs.add(new Entity().setDataUri(new URI(outputURL)).setWasAttributedTo(new URI("mailto:jo@blogs.com")).setTitle("1000_yrRP_hazard_map.png"));
+            outputs.add(new Entity().setDataUri(new URI(outputURL)).setWasAttributedTo(mockProfileUrl).setTitle("1000_yrRP_hazard_map.png"));
             activity.setGeneratedEntities(outputs);
             Report report = new ExternalReport()
                     .setActivity(activity)
@@ -224,7 +225,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         if (activity != null) {
             activity.setEndedAtTime(new Date());
             String outputURL = serverURL + "/secure/jobFile.do?jobId=21&key=job-macgo-bt-everbloom_gmail_com-0000000021/1000_yrRP_hazard_map.png";
-            outputs.add(new Entity().setDataUri(new URI(outputURL)).setWasAttributedTo(new URI("mailto:jo@blogs.com")));
+            outputs.add(new Entity().setDataUri(new URI(outputURL)).setWasAttributedTo(mockProfileUrl));
             activity.setGeneratedEntities(outputs);
             StringWriter out = new StringWriter();
             activity.getGraph().write(out, "TURTLE", serverURL);

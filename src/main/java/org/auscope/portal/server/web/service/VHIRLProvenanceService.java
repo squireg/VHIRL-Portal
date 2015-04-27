@@ -104,14 +104,13 @@ public class VHIRLProvenanceService {
         Activity vhirlJob = null;
 
         Set<Entity> inputs = createEntitiesForInputs(job, solution, user);
-        String userLink = user.getLink().toString();
         try {
             vhirlJob = new Activity()
                     .setActivityUri(new URI(jobURL))
                     .setTitle(job.getName())
                     .setDescription(job.getDescription())
                     .setStartedAtTime(new Date())
-                    .wasAssociatedWith(userLink)
+                    .wasAssociatedWith(user.getLink())
                     .setUsedEntities(inputs);
         } catch (URISyntaxException ex) {
             LOGGER.error(String.format("Error parsing server name %s into URI.",
@@ -256,7 +255,7 @@ public class VHIRLProvenanceService {
                 if (metadata == null) {
                     inputs.add(new Entity().setDataUri(inputURI)
                             .setTitle(fileName)
-                            .setWasAttributedTo(new URI(MAIL + job.getUser())));
+                            .setWasAttributedTo(user));
                 } else {
                     URI copyrightURI = null;
                     if (metadata.getCopyright() != null)
@@ -334,7 +333,7 @@ public class VHIRLProvenanceService {
     /**
      * Takes a completed job and finishes creating the provenance record, and
      * uploads it to the cloud. The job *must* have had
-     * {@link #createActivity(VEGLJob, Solution) createActivity}
+     * {@link #createActivity(VEGLJob, Solution, VHIRLUser) createActivity}
      * called with it already. Otherwise it can't collect the relevant
      * information, and won't do anything.
      * @param job Completed virtual labs job, about which we will finish our
