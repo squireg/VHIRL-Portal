@@ -10,6 +10,7 @@ import org.auscope.portal.core.test.PortalTestClass;
 import org.auscope.portal.server.gridjob.FileInformation;
 import org.auscope.portal.server.vegl.VEGLJob;
 import org.auscope.portal.server.vegl.VglDownload;
+import org.auscope.portal.server.web.security.VHIRLUser;
 import org.auscope.portal.server.web.service.scm.Solution;
 import org.jmock.Expectations;
 import org.junit.After;
@@ -33,6 +34,8 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
     final String jobDescription = "Some job I made.";
     final String activityFileName = "activity.ttl";
     final String PROMSURI = "http://proms-dev.vhirl.net/id/report/";
+    URI mockProfileUrl;
+    VHIRLUser mockPortalUser;
     Solution solution;
     List<VglDownload> downloads = new ArrayList<>();
     VEGLJob turtleJob;
@@ -42,10 +45,12 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
 
     final String intermediateTurtle =
             "      a       <http://www.w3.org/ns/prov#Entity> ;" + System.lineSeparator() +
+            "      <http://www.w3.org/2000/01/rdf-schema#label>" + System.lineSeparator() +
+            "              \"activity.ttl\"^^<http://www.w3.org/2001/XMLSchema#string> ;" + System.lineSeparator() +
             "      <http://www.w3.org/ns/dcat#downloadURL>" + System.lineSeparator() +
             "              \"http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=activity.ttl\"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;" + System.lineSeparator() +
             "      <http://www.w3.org/ns/prov#wasAttributedTo>" + System.lineSeparator() +
-            "              \"mailto:foo@test.com\"^^<http://www.w3.org/2001/XMLSchema#string> .";
+            "              <https://plus.google.com/1> .";
 
     final String endedTurtle = "<http://www.w3.org/ns/prov#endedAtTime>";
     final String file1Turtle =
@@ -53,13 +58,14 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
             "      <http://www.w3.org/ns/dcat#downloadURL>" + System.lineSeparator() +
             "              \"http://portal-fake.vhirl.org/secure/jobFile.do?jobId=1&key=cloudKey\"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;" + System.lineSeparator() +
             "      <http://www.w3.org/ns/prov#wasAttributedTo>" + System.lineSeparator() +
-            "              \"mailto:foo@test.com\"^^<http://www.w3.org/2001/XMLSchema#string> .";
+            "              <https://plus.google.com/1> .";
 
     VHIRLProvenanceService vhirlProvenanceService;
 
     @Before
     public void setUp() throws Exception {
         preparedJob = context.mock(VEGLJob.class);
+        mockPortalUser = context.mock(VHIRLUser.class);
         final CloudStorageService store = context.mock(CloudStorageService.class);
         final CloudStorageService[] storageServices = {store};
         final VHIRLFileStagingService fileServer = context.mock(VHIRLFileStagingService.class);
@@ -67,6 +73,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         URL turtleURL = getClass().getResource("/turtle.ttl");
         final File activityFile2 = new File(turtleURL.toURI());
         solution = context.mock(Solution.class);
+        mockProfileUrl = new URI("https://plus.google.com/1");
 
         vhirlProvenanceService = new VHIRLProvenanceService(fileServer, storageServices);
         vhirlProvenanceService.setServerURL(serverURL);
@@ -126,6 +133,9 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
 
             allowing(turtleJob).getId();
             will(returnValue(1));
+
+            allowing(mockPortalUser).getLink();
+            will(returnValue(mockProfileUrl));
         }});
     }
 
@@ -136,7 +146,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
 
     @Test
     public void testCreateActivity() throws Exception {
-        String graph = vhirlProvenanceService.createActivity(preparedJob, solution);
+        String graph = vhirlProvenanceService.createActivity(preparedJob, solution, mockPortalUser);
         Assert.assertTrue(graph.contains(initalTurtle));
         Assert.assertTrue(graph.contains(intermediateTurtle));
     }
@@ -160,7 +170,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
 
     @Test
     public void testCreateEntitiesForInputs() throws Exception {
-        Set<Entity> entities = vhirlProvenanceService.createEntitiesForInputs(preparedJob, solution);
+        Set<Entity> entities = vhirlProvenanceService.createEntitiesForInputs(preparedJob, solution, mockPortalUser);
         Assert.assertNotNull(entities);
         Assert.assertEquals(4, entities.size());
     }
@@ -186,7 +196,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         if (activity != null) {
             activity.setEndedAtTime(new Date());
             String outputURL = serverURL + "/secure/jobFile.do?jobId=21&key=job-macgo-bt-everbloom_gmail_com-0000000021/1000_yrRP_hazard_map.png";
-            outputs.add(new Entity().setDataUri(new URI(outputURL)).setWasAttributedTo(new URI("mailto:jo@blogs.com")).setTitle("1000_yrRP_hazard_map.png"));
+            outputs.add(new Entity().setDataUri(new URI(outputURL)).setWasAttributedTo(mockProfileUrl).setTitle("1000_yrRP_hazard_map.png"));
             activity.setGeneratedEntities(outputs);
             Report report = new ExternalReport()
                     .setActivity(activity)
@@ -215,7 +225,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         if (activity != null) {
             activity.setEndedAtTime(new Date());
             String outputURL = serverURL + "/secure/jobFile.do?jobId=21&key=job-macgo-bt-everbloom_gmail_com-0000000021/1000_yrRP_hazard_map.png";
-            outputs.add(new Entity().setDataUri(new URI(outputURL)).setWasAttributedTo(new URI("mailto:jo@blogs.com")));
+            outputs.add(new Entity().setDataUri(new URI(outputURL)).setWasAttributedTo(mockProfileUrl));
             activity.setGeneratedEntities(outputs);
             StringWriter out = new StringWriter();
             activity.getGraph().write(out, "TURTLE", serverURL);

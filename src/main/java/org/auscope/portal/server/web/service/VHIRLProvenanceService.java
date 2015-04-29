@@ -13,6 +13,7 @@ import org.auscope.portal.core.services.cloud.CloudStorageService;
 import org.auscope.portal.server.gridjob.FileInformation;
 import org.auscope.portal.server.vegl.VEGLJob;
 import org.auscope.portal.server.vegl.VglDownload;
+import org.auscope.portal.server.web.security.VHIRLUser;
 import org.auscope.portal.server.web.service.scm.Solution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -98,17 +99,18 @@ public class VHIRLProvenanceService {
      *            should be just about to execute, but not yet have started.
      * @return The TURTLE text.
      */
-    public final String createActivity(final VEGLJob job, final Solution solution) {
+    public final String createActivity(final VEGLJob job, final Solution solution, VHIRLUser user) {
         String jobURL = jobURL(job, serverURL());
         Activity vhirlJob = null;
-        Set<Entity> inputs = createEntitiesForInputs(job, solution);
+
+        Set<Entity> inputs = createEntitiesForInputs(job, solution, user);
         try {
             vhirlJob = new Activity()
                     .setActivityUri(new URI(jobURL))
                     .setTitle(job.getName())
                     .setDescription(job.getDescription())
                     .setStartedAtTime(new Date())
-                    .wasAssociatedWith(MAIL + job.getUser())
+                    .wasAssociatedWith(user.getLink())
                     .setUsedEntities(inputs);
         } catch (URISyntaxException ex) {
             LOGGER.error(String.format("Error parsing server name %s into URI.",
@@ -200,16 +202,9 @@ public class VHIRLProvenanceService {
      * @param job The virtual labs job we want to examine the inputs of.
      * @return An array of PROV-O entities. May be empty, but won't be null.
      */
-    public Set<Entity> createEntitiesForInputs(final VEGLJob job, final Solution solution) {
+    public Set<Entity> createEntitiesForInputs(final VEGLJob job, final Solution solution, VHIRLUser vhirlUser) {
         Set<Entity> inputs = new HashSet<>();
-        URI user = null;
-        try {
-            user = new URI(MAIL + job.getUser());
-        } catch (URISyntaxException ex) {
-            LOGGER.error(String.format(
-                    "Error parsing username %s to URI.",
-                    job.getUser()), ex);
-        }
+        URI user = vhirlUser.getLink();
         // Downloads first
         try {
             for (VglDownload dataset : job.getJobDownloads()) {
@@ -218,15 +213,16 @@ public class VHIRLProvenanceService {
                 if (dataset.getParentUrl() != null && !dataset.getParentUrl().isEmpty())
                     baseURI = new URI(dataset.getParentUrl());
                 URI attributed = user;
-                if (dataset.getOwner() != null && !dataset.getOwner().isEmpty())
+                if (dataset.getOwner() != null && !dataset.getOwner().isEmpty()) {
                     attributed = new URI(MAIL + dataset.getOwner());
+                }
                 inputs.add((ServiceEntity) new ServiceEntity()
                         .setQueriedAtTime(new Date())
                         .setQuery(dataURI.getQuery())
                         .setServiceBaseUri(baseURI)
-                        .setDataUri(dataURI)
                         .setDescription(dataset.getDescription())
                         .setWasAttributedTo(attributed)
+                        .setEntityUri(dataURI)
                         .setTitle(dataset.getName()));
                 LOGGER.debug("New Input: " + dataset.getUrl());
             }
@@ -250,10 +246,16 @@ public class VHIRLProvenanceService {
 
                 URI inputURI = new URI(outputURL(
                         job, information, serverURL()));
+
+                String[] filePath = inputURI.getPath().split("/");
+                String fileName = filePath[filePath.length - 1];
+                if (information.getName() != null && !information.getName().equals(""))
+                    fileName = information.getName();
                 LOGGER.debug("New Input: " + inputURI.toString());
                 if (metadata == null) {
                     inputs.add(new Entity().setDataUri(inputURI)
-                            .setWasAttributedTo(new URI(MAIL + job.getUser())));
+                            .setTitle(fileName)
+                            .setWasAttributedTo(user));
                 } else {
                     URI copyrightURI = null;
                     if (metadata.getCopyright() != null)
@@ -265,8 +267,10 @@ public class VHIRLProvenanceService {
                     URI owner = new URI(MAIL + metadata.getOwner());
                     if (metadata.getOwner() == null || metadata.getOwner().isEmpty())
                         owner = user;
+                    if (metadata.getName() != null && !metadata.getName().equals(""))
+                        fileName = metadata.getName();
                     inputs.add(new Entity().setDataUri(inputURI)
-                            .setTitle(metadata.getName())
+                            .setTitle(fileName)
                             .setRights(copyrightURI)
                             .setCreated(metadata.getDate())
                             .setDescription(metadata.getDescription())
@@ -287,7 +291,7 @@ public class VHIRLProvenanceService {
             URI dataURI = new URI(solution.getUri());
             inputs.add(new Entity()
                     .setWasAttributedTo(user)
-                    .setDataUri(dataURI)
+                    .setEntityUri(dataURI)
                     .setDescription(solution.getDescription())
                     .setCreated(solution.getCreatedAt())
                     .setTitle(solution.getName())
@@ -329,7 +333,7 @@ public class VHIRLProvenanceService {
     /**
      * Takes a completed job and finishes creating the provenance record, and
      * uploads it to the cloud. The job *must* have had
-     * {@link #createActivity(VEGLJob, Solution) createActivity}
+     * {@link #createActivity(VEGLJob, Solution, VHIRLUser) createActivity}
      * called with it already. Otherwise it can't collect the relevant
      * information, and won't do anything.
      * @param job Completed virtual labs job, about which we will finish our
@@ -362,11 +366,12 @@ public class VHIRLProvenanceService {
                     activity = new Activity().setActivityUri(new URI(
                             jobURL(job, serverURL()))).setFromModel(model);
                 } else if (!names.contains(information.getName())) {
-                    // Ah ha! This must be an output or input.
+                    // Ah ha! This must be an output.
                     URI outputURI = new URI(outputURL(
                             job, information, serverURL()));
                     LOGGER.debug("New input/output: " + outputURI.toString());
                     potentialOutputs.add(new Entity().setDataUri(outputURI)
+                            .setTitle(information.getName())
                             .setWasAttributedTo(new URI(MAIL + job.getUser())));
                 }
             }

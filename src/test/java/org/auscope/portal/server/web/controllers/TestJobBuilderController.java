@@ -3,6 +3,7 @@ package org.auscope.portal.server.web.controllers;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,6 +32,7 @@ import org.auscope.portal.server.vegl.VglDownload;
 import org.auscope.portal.server.vegl.VglMachineImage;
 import org.auscope.portal.server.vegl.VglParameter;
 import org.auscope.portal.server.vegl.mail.JobMailSender;
+import org.auscope.portal.server.web.security.VHIRLUser;
 import org.auscope.portal.server.web.service.ScmEntryService;
 import org.auscope.portal.server.web.service.VHIRLFileStagingService;
 import org.auscope.portal.server.web.service.VHIRLProvenanceService;
@@ -68,7 +70,7 @@ public class TestJobBuilderController {
     private HttpServletRequest mockRequest;
     private HttpServletResponse mockResponse;
     private HttpSession mockSession;
-    private PortalUser mockPortalUser;
+    private VHIRLUser mockPortalUser;
     private VGLPollingJobQueueManager vglPollingJobQueueManager;
     private VGLJobStatusChangeHandler vglJobStatusChangeHandler;
     private VHIRLProvenanceService vhirlProvenanceService;
@@ -87,7 +89,7 @@ public class TestJobBuilderController {
         mockJobManager = context.mock(VEGLJobManager.class);
         mockFileStagingService = context.mock(VHIRLFileStagingService.class);
         mockHostConfigurer = context.mock(PortalPropertyPlaceholderConfigurer.class);
-        mockPortalUser = context.mock(PortalUser.class);
+        mockPortalUser = context.mock(VHIRLUser.class);
         mockCloudStorageServices = new CloudStorageService[]{context.mock(CloudStorageService.class)};
         mockCloudComputeServices = new CloudComputeService[]{context.mock(CloudComputeService.class)};
         mockRequest = context.mock(HttpServletRequest.class);
@@ -588,6 +590,8 @@ public class TestJobBuilderController {
         final String storageProvider = "provider";
         final String storageAuthVersion = "1.2.3";
         final String regionName = null;
+        final String mockUser = "jo@me.com";
+        final URI mockProfileUrl = new URI("https://plus.google.com/1");
 
         final Solution mockSolution = context.mock(Solution.class);
 
@@ -669,10 +673,13 @@ public class TestJobBuilderController {
 
             oneOf(mockRequest).getRequestURL();will(returnValue(new StringBuffer("http://mock.fake/secure/something")));
 
+            oneOf(mockPortalUser).getUsername();will(returnValue(mockUser));
+            allowing(mockPortalUser).getLink();will(returnValue(mockProfileUrl));
+
         }});
 
 
-        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobObj.getId().toString());
+        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobObj.getId().toString(), mockPortalUser);
 
         Assert.assertTrue((Boolean)mav.getModel().get("success"));
         Thread.sleep(1000);
@@ -722,7 +729,7 @@ public class TestJobBuilderController {
             oneOf(mockJobManager).createJobAuditTrail(jobInSavedState, jobObj, errorDescription);
         }});
 
-        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobObj.getId().toString());
+        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobObj.getId().toString(), mockPortalUser);
 
         Assert.assertFalse((Boolean)mav.getModel().get("success"));
         Assert.assertEquals(JobBuilderController.STATUS_UNSUBMITTED, jobObj.getStatus());
@@ -740,7 +747,7 @@ public class TestJobBuilderController {
             oneOf(mockJobManager).getJobById(Integer.parseInt(jobId));will(returnValue(null));
         }});
 
-        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobId);
+        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobId, mockPortalUser);
 
         Assert.assertFalse((Boolean)mav.getModel().get("success"));
     }
@@ -795,7 +802,7 @@ public class TestJobBuilderController {
             oneOf(mockJobManager).createJobAuditTrail(jobInSavedState, jobObj, "");
         }});
 
-        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobObj.getId().toString());
+        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobObj.getId().toString(), mockPortalUser);
 
         Assert.assertFalse((Boolean)mav.getModel().get("success"));
         Assert.assertEquals(JobBuilderController.STATUS_UNSUBMITTED, jobObj.getStatus());
@@ -830,6 +837,8 @@ public class TestJobBuilderController {
         final PortalServiceException exception = new PortalServiceException("Some random error","Some error correction");
 
         final Solution mockSolution = context.mock(Solution.class);
+        final String mockUser = "jo@me.com";
+        final URI mockProfileUrl = new URI("https://plus.google.com/1");
 
         final File activityFile = File.createTempFile("activity", ".ttl");
         final String activityFileName = "activity.ttl";
@@ -909,9 +918,13 @@ public class TestJobBuilderController {
 
             oneOf(mockJobMailSender).sendMail(jobObj);
             oneOf(mockVGLJobStatusAndLogReader).getSectionedLog(jobObj, "Time");
+
+
+            oneOf(mockPortalUser).getUsername();will(returnValue(mockUser));
+            allowing(mockPortalUser).getLink();will(returnValue(mockProfileUrl));
         }});
 
-        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobObj.getId().toString());
+        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobObj.getId().toString(), mockPortalUser);
 
         Assert.assertTrue((Boolean)mav.getModel().get("success"));
         //VT:wait a while for the thread to finish before getting the status.
@@ -952,6 +965,8 @@ public class TestJobBuilderController {
         final String storageEndpoint = "http://example.org";
         final String storageServiceId = "storage-service-id";
         final String regionName = "region-name";
+        final String mockUser = "jo@me.com";
+        final URI mockProfileUrl = new URI("https://plus.google.com/1");
 
         final File activityFile = File.createTempFile("activity", ".ttl");
         final String activityFileName = "activity.ttl";
@@ -1030,9 +1045,12 @@ public class TestJobBuilderController {
             oneOf(mockJobManager).createJobAuditTrail(JobBuilderController.STATUS_PROVISION, jobObj, "Job Placed in Queue");
 
 
+            oneOf(mockPortalUser).getUsername();will(returnValue(mockUser));
+            allowing(mockPortalUser).getLink();will(returnValue(mockProfileUrl));
+
         }});
 
-        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobObj.getId().toString());
+        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobObj.getId().toString(), mockPortalUser);
         Thread.sleep(2000);
         Assert.assertTrue(vglPollingJobQueueManager.getQueue().hasJob());
         Assert.assertTrue((Boolean)mav.getModel().get("success"));
@@ -1076,7 +1094,7 @@ public class TestJobBuilderController {
             oneOf(mockImages[0]).getImageId();will(returnValue("compute-vmi-id"));
         }});
 
-        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobObj.getId().toString());
+        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobObj.getId().toString(), mockPortalUser);
 
         Assert.assertFalse((Boolean)mav.getModel().get("success"));
         Assert.assertEquals(JobBuilderController.STATUS_UNSUBMITTED, jobObj.getStatus());
@@ -1118,7 +1136,7 @@ public class TestJobBuilderController {
             oneOf(mockImages[0]).getImageId();will(returnValue("compute-vmi-id"));
         }});
 
-        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobObj.getId().toString());
+        ModelAndView mav = controller.submitJob(mockRequest, mockResponse, jobObj.getId().toString(), mockPortalUser);
 
         Assert.assertFalse((Boolean)mav.getModel().get("success"));
         Assert.assertEquals(JobBuilderController.STATUS_UNSUBMITTED, jobObj.getStatus());

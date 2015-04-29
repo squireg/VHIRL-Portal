@@ -45,7 +45,7 @@
         <beans:constructor-arg name="clientSecret" value="${env.oauth2.google.clientsecret}"/>
     </beans:bean>
 
-    <beans:bean id="simpleUserLoader" class="org.auscope.portal.core.server.security.oauth2.GoogleOAuth2UserDetailsLoader">
+    <beans:bean id="simpleUserLoader" class="org.auscope.portal.server.web.security.VHIRLGoogleUserDetailsLoader">
         <beans:constructor-arg name="defaultRole" value="ROLE_USER"/>
         <beans:constructor-arg name="rolesByUser">
             <beans:map>
