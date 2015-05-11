@@ -36,7 +36,8 @@ Ext.define('vegl.util.DataSelectionUtil', {
         //Set the defaults of our new item
         var downloadOptions = {
             name : 'Subset of ' + or.get('name'),
-            description : or.get('description') + ' ' + cswRecord.get('descriptiveKeywords').join(' '),
+            fullDescription : or.get('description') + ' ' + cswRecord.get('descriptiveKeywords').join(' '),
+            description: or.get('description'),
             url : or.get('url'),
             method : 'POST',
             localPath : '/tmp/' + or.get('name'),
