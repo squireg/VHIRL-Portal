@@ -87,6 +87,7 @@ public class JobDownloadController extends BasePortalController {
     public ModelAndView makeDownloadUrl(@RequestParam("url") String url,
             @RequestParam("name") String name,
             @RequestParam("description") String description,
+            @RequestParam("fullDescription") final String fullDescription,
             @RequestParam("localPath") String localPath,
             @RequestParam("northBoundLatitude") final Double northBoundLatitude,
             @RequestParam("eastBoundLongitude") final Double eastBoundLongitude,
@@ -100,7 +101,7 @@ public class JobDownloadController extends BasePortalController {
 
         VglDownload newDownload = new VglDownload();
         newDownload.setName(name);
-        newDownload.setDescription(description);
+        newDownload.setDescription(fullDescription);
         newDownload.setLocalPath(localPath);
         newDownload.setUrl(url);
         newDownload.setNorthBoundLatitude(northBoundLatitude);
@@ -133,6 +134,7 @@ public class JobDownloadController extends BasePortalController {
                                 @RequestParam("layerName") final String layerName,
                                 @RequestParam("name") final String name,
                                 @RequestParam("description") final String description,
+                                @RequestParam("fullDescription") final String fullDescription,
                                 @RequestParam("localPath") final String localPath,
                                 @RequestParam("parentName") String parentName,
                                 @RequestParam("parentUrl") String parentUrl,
@@ -148,7 +150,7 @@ public class JobDownloadController extends BasePortalController {
         // Append this download list to the existing list of download objects
         VglDownload newDownload = new VglDownload();
         newDownload.setName(name);
-        newDownload.setDescription(description);
+        newDownload.setDescription(fullDescription);
         newDownload.setLocalPath(localPath);
         newDownload.setUrl(erddapUrl);
         newDownload.setNorthBoundLatitude(northBoundLatitude);
@@ -181,6 +183,7 @@ public class JobDownloadController extends BasePortalController {
                                 @RequestParam("westBoundLongitude") final Double westBoundLongitude,
                                 @RequestParam("name") final String name,
                                 @RequestParam("description") final String description,
+                                @RequestParam("fullDescription") final String fullDescription,
                                 @RequestParam("localPath") final String localPath,
                                 @RequestParam("parentName") String parentName,
                                 @RequestParam("parentUrl") String parentUrl,
@@ -196,7 +199,7 @@ public class JobDownloadController extends BasePortalController {
         // Append this download list to the existing list of download objects
         VglDownload newDownload = new VglDownload();
         newDownload.setName(name);
-        newDownload.setDescription(description);
+        newDownload.setDescription(fullDescription);
         newDownload.setLocalPath(localPath);
         newDownload.setUrl(netcdfsubsetserviceUrl);
         newDownload.setNorthBoundLatitude(northBoundLatitude);
@@ -237,6 +240,7 @@ public class JobDownloadController extends BasePortalController {
                                            @RequestParam(required = false, value = "maxFeatures") Integer maxFeatures,
                                            @RequestParam("name") final String name,
                                            @RequestParam("description") final String description,
+                                           @RequestParam("fullDescription") final String fullDescription,
                                            @RequestParam("localPath") final String localPath,
                                            @RequestParam("parentName") String parentName,
                                            @RequestParam("parentUrl") String parentUrl,
@@ -261,7 +265,7 @@ public class JobDownloadController extends BasePortalController {
         
         VglDownload newDownload = new VglDownload();
         newDownload.setName(name);
-        newDownload.setDescription(description);
+        newDownload.setDescription(fullDescription);
         newDownload.setLocalPath(localPath);
         newDownload.setUrl(response);
         newDownload.setNorthBoundLatitude(northBoundLatitude);
@@ -329,7 +333,7 @@ public class JobDownloadController extends BasePortalController {
      * @return The NCSS subset request URL
      */
     private String getNetcdfSubsetUrl(CSWGeographicBoundingBox bbox, String serviceUrl, String name, String description, String format) {
-        logger.debug(String.format("serviceUrl='%1$s' bbox='%2$s' layerName='%3$s'", serviceUrl, bbox, name, description));
+        logger.debug(String.format("serviceUrl='%1$s' bbox='%2$s' layerName='%3$s'  layerDescription='%4$s'", serviceUrl, bbox, name, description));
         
         // convert bbox co-ordinates to an netcdfsubsetservice dimension string
         String netcdfsubsetserviceDimensions = "&spatial=bb" +

@@ -66,7 +66,7 @@ public class TestJobDownloadController extends PortalTestClass {
             oneOf(mockSession).setAttribute(JobDownloadController.SESSION_DOWNLOAD_LIST, downloads);
         }});
 
-        ModelAndView mav = controller.makeErddapUrl(northBoundLatitude, eastBoundLongitude, southBoundLatitude, westBoundLongitude, format, layerName, name, description, localPath, parentName, parentUrl, owner, true, mockRequest, mockResponse);
+        ModelAndView mav = controller.makeErddapUrl(northBoundLatitude, eastBoundLongitude, southBoundLatitude, westBoundLongitude, format, layerName, name, description, description, localPath, parentName, parentUrl, owner, true, mockRequest, mockResponse);
         Assert.assertNotNull(mav);
         Assert.assertTrue(((Boolean) mav.getModel().get("success")));
 
@@ -117,7 +117,7 @@ public class TestJobDownloadController extends PortalTestClass {
             allowing(mockRequest).getSession();will(returnValue(mockSession));
         }});
 
-        ModelAndView mav = controller.makeErddapUrl(northBoundLatitude, eastBoundLongitude, southBoundLatitude, westBoundLongitude, format, layerName, name, description, localPath, parentName, parentUrl, owner, false, mockRequest, mockResponse);
+        ModelAndView mav = controller.makeErddapUrl(northBoundLatitude, eastBoundLongitude, southBoundLatitude, westBoundLongitude, format, layerName, name, description, description, localPath, parentName, parentUrl, owner, false, mockRequest, mockResponse);
         Assert.assertNotNull(mav);
         Assert.assertTrue(((Boolean) mav.getModel().get("success")));
 
@@ -155,7 +155,7 @@ public class TestJobDownloadController extends PortalTestClass {
             oneOf(mockSession).setAttribute(JobDownloadController.SESSION_DOWNLOAD_LIST, downloads);
         }});
 
-        ModelAndView mav = controller.makeDownloadUrl(serviceUrl, name, description, localPath, northBoundLatitude, eastBoundLongitude, southBoundLatitude, westBoundLongitude, parentName, parentUrl, owner, true, mockRequest);
+        ModelAndView mav = controller.makeDownloadUrl(serviceUrl, name, description, description, localPath, northBoundLatitude, eastBoundLongitude, southBoundLatitude, westBoundLongitude, parentName, parentUrl, owner, true, mockRequest);
         Assert.assertNotNull(mav);
         Assert.assertTrue(((Boolean) mav.getModel().get("success")));
 
@@ -200,7 +200,7 @@ public class TestJobDownloadController extends PortalTestClass {
             allowing(mockRequest).getSession();will(returnValue(mockSession));
         }});
 
-        ModelAndView mav = controller.makeDownloadUrl(serviceUrl, name, description, localPath, northBoundLatitude, eastBoundLongitude, southBoundLatitude, westBoundLongitude, parentName, parentUrl, owner, false, mockRequest);
+        ModelAndView mav = controller.makeDownloadUrl(serviceUrl, name, description, description, localPath, northBoundLatitude, eastBoundLongitude, southBoundLatitude, westBoundLongitude, parentName, parentUrl, owner, false, mockRequest);
         Assert.assertNotNull(mav);
         Assert.assertTrue(((Boolean) mav.getModel().get("success")));
 
@@ -253,7 +253,7 @@ public class TestJobDownloadController extends PortalTestClass {
 
         ModelAndView mav = controller.makeWfsUrl(serviceUrl, featureType, srsName, bboxSrs, 
                 northBoundLatitude, southBoundLatitude, eastBoundLongitude, westBoundLongitude, 
-                outputFormat, maxFeatures, name, description, localPath, parentName, parentUrl, owner, true, mockRequest);
+                outputFormat, maxFeatures, name, description, description, localPath, parentName, parentUrl, owner, true, mockRequest);
         Assert.assertNotNull(mav);
         Assert.assertTrue(((Boolean) mav.getModel().get("success")));
 
@@ -314,7 +314,7 @@ public class TestJobDownloadController extends PortalTestClass {
 
         ModelAndView mav = controller.makeWfsUrl(serviceUrl, featureType, srsName, bboxSrs, 
                 northBoundLatitude, southBoundLatitude, eastBoundLongitude, westBoundLongitude, 
-                outputFormat, maxFeatures, name, description, localPath, parentName, parentUrl, owner, false, mockRequest);
+                outputFormat, maxFeatures, name, description, description, localPath, parentName, parentUrl, owner, false, mockRequest);
         Assert.assertNotNull(mav);
         Assert.assertTrue(((Boolean) mav.getModel().get("success")));
 

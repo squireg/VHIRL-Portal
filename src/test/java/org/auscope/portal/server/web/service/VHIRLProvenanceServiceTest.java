@@ -53,6 +53,8 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
             "              <https://plus.google.com/1> .";
 
     final String endedTurtle = "<http://www.w3.org/ns/prov#endedAtTime>";
+    final String serviceTurtle = "<http://promsns.org/def/proms#ServiceEntity>";
+
     final String file1Turtle =
             "      a       <http://www.w3.org/ns/prov#Entity> ;" + System.lineSeparator() +
             "      <http://www.w3.org/ns/dcat#downloadURL>" + System.lineSeparator() +
@@ -78,7 +80,8 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
         vhirlProvenanceService = new VHIRLProvenanceService(fileServer, storageServices);
         vhirlProvenanceService.setServerURL(serverURL);
         VglDownload download = new VglDownload(1);
-        download.setUrl("http://portal-uploads.vhirl.org/file1");
+        download.setUrl("http://portal-uploads.vhirl.org/file1?download=true");
+        download.setParentUrl("http://portal-uploads.vhirl.org/");
         download.setName("file1");
         downloads.add(download);
         CloudFileInformation cloudFileInformation = new CloudFileInformation(cloudKey, 0, "");
@@ -148,6 +151,7 @@ public class VHIRLProvenanceServiceTest extends PortalTestClass {
     public void testCreateActivity() throws Exception {
         String graph = vhirlProvenanceService.createActivity(preparedJob, solution, mockPortalUser);
         Assert.assertTrue(graph.contains(initalTurtle));
+        Assert.assertTrue(graph.contains(serviceTurtle));
         Assert.assertTrue(graph.contains(intermediateTurtle));
     }
 

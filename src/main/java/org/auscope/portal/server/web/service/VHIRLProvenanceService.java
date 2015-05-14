@@ -110,7 +110,7 @@ public class VHIRLProvenanceService {
                     .setTitle(job.getName())
                     .setDescription(job.getDescription())
                     .setStartedAtTime(new Date())
-                    .wasAssociatedWith(user.getLink())
+                    .setWasAssociatedWith(user.getLink())
                     .setUsedEntities(inputs);
         } catch (URISyntaxException ex) {
             LOGGER.error(String.format("Error parsing server name %s into URI.",
@@ -214,7 +214,11 @@ public class VHIRLProvenanceService {
                     baseURI = new URI(dataset.getParentUrl());
                 URI attributed = user;
                 if (dataset.getOwner() != null && !dataset.getOwner().isEmpty()) {
-                    attributed = new URI(MAIL + dataset.getOwner());
+                    try {
+                        attributed = new URI(dataset.getOwner());
+                    } catch (URISyntaxException e) {
+                        LOGGER.warn(e);
+                    }
                 }
                 inputs.add((ServiceEntity) new ServiceEntity()
                         .setQueriedAtTime(new Date())
@@ -222,9 +226,8 @@ public class VHIRLProvenanceService {
                         .setServiceBaseUri(baseURI)
                         .setDescription(dataset.getDescription())
                         .setWasAttributedTo(attributed)
-                        .setEntityUri(dataURI)
                         .setTitle(dataset.getName()));
-                LOGGER.debug("New Input: " + dataset.getUrl());
+                LOGGER.debug("New Download Input: " + dataset.getUrl());
             }
         } catch (URISyntaxException ex) {
             LOGGER.error(String.format(
@@ -370,9 +373,9 @@ public class VHIRLProvenanceService {
                     URI outputURI = new URI(outputURL(
                             job, information, serverURL()));
                     LOGGER.debug("New input/output: " + outputURI.toString());
-                    potentialOutputs.add(new Entity().setDataUri(outputURI)
-                            .setTitle(information.getName())
-                            .setWasAttributedTo(new URI(MAIL + job.getUser())));
+                    potentialOutputs.add(new Entity()
+                            .setDataUri(outputURI)
+                            .setTitle(information.getName()));
                 }
             }
         } catch (PortalServiceException |
@@ -385,8 +388,10 @@ public class VHIRLProvenanceService {
         if (activity != null) {
             activity.setEndedAtTime(job.getProcessDate());
             for (Entity potentialOutput : potentialOutputs) {
+                potentialOutput.setWasAttributedTo(activity.getWasAssociatedWith());
                 if (activity.usedEntities != null && !activity
                         .usedEntities.contains(potentialOutput)) {
+                    potentialOutput.setCreated(new Date());
                     outputs.add(potentialOutput);
                     LOGGER.debug("Added input from potentials list: "
                             + potentialOutput);
