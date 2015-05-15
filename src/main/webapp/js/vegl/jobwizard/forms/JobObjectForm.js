@@ -217,6 +217,7 @@ Ext.define('vegl.jobwizard.forms.JobObjectForm', {
                 typeAhead: true,
                 forceSelection: true,
                 store : this.imageStore,
+                hidden : true,
                 listConfig : {
                     loadingText: 'Getting tools...',
                     emptyText: 'No matching toolboxes found. Select a different compute location.'
